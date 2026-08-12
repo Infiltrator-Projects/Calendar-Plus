@@ -46,7 +46,7 @@ def main() -> None:
     assert "shared/infiltratr-common" in makefile
     assert (
         "INFILTRATR_COMMON_COMMIT := "
-        "8e482639980f9b4ecd49313e3fc788ed36aee381"
+        "b90cf49521bb8ecf85e46a39f67f1c0d0a0509b2"
     ) in makefile
     assert "make common-bootstrap" in read("README.md")
     assert "The-First-Infiltrator/Infiltrator-Libraries.git" in gitmodules
@@ -150,11 +150,13 @@ def main() -> None:
     assert "clang-analyzer-*" in makefile
     assert (ROOT / "tests/abi-baseline.txt").is_file()
     shared = ROOT / "shared/infiltratr-common"
-    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.1.1"
+    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.2.0"
     assert (shared / "LICENSE").is_file()
     assert (shared / "include/infiltratr/core.h").is_file()
+    assert (shared / "include/infiltratr/format.h").is_file()
     assert (shared / "include/infiltratr/posix.h").is_file()
     assert (shared / "src/core.c").is_file()
+    assert (shared / "src/format.c").is_file()
     assert (shared / "src/posix.c").is_file()
     assert "InfiltratrProjectInfo" in read(
         "shared/infiltratr-common/include/infiltratr/core.h"
