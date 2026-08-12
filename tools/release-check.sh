@@ -13,6 +13,9 @@ shellcheck tools/*.sh tools/local-installer.sh.in
 make check
 make package-source
 make package-local-installer
+# The deterministic source ZIP is an internal input to the local builder.
+# GitHub supplies the public tagged source ZIP and tar.gz automatically.
+rm -f dist/Calendar-Plus-*-local-source.zip
 make reproducible-build
 
 VERSION=$(sed -n 's/^VERSION := //p' Makefile)
@@ -49,8 +52,7 @@ tools/validate-release-artifacts.sh dist
 tools/native-installer-smoke.sh \
     "dist/calendar-plus-${VERSION}-local-folder.run"
 
-printf 'Release gates passed: generic=%s; installer=%s; source=%s; dsc=%s\n' \
+printf 'Release gates passed: generic=%s; installer=%s; tagged-source=GitHub; dsc=%s\n' \
     "dist/calendar-plus_${VERSION}_${ARCH}.deb" \
     "dist/calendar-plus-${VERSION}-local-folder.run" \
-    "dist/Calendar-Plus-${VERSION}-local-source.zip" \
     "$DSC"

@@ -50,20 +50,28 @@ The JavaScript applet checks the loaded native library version before creating
 the popup. The only helper executable is the on-demand GTK 3 About dialog.
 Calendar Plus installs no daemon, polling service or autostart entry.
 
-## Three release files
+## Release downloads
 
-Every release has exactly three public downloads:
+Each release is intended to be simple for end users:
 
 | File | Purpose |
 | --- | --- |
 | `calendar-plus_<version>_amd64.deb` | Generic amd64 package built with conservative `-O2` optimisation. |
 | `calendar-plus-<version>-local-folder.run` | Verifies its embedded source, builds with `-O3 -march=native -mtune=native -flto=auto`, creates a `+native1` Debian package and installs it through APT. |
-| `Calendar-Plus-<version>-local-source.zip` | Complete source, tests, localisation, build tools and Debian packaging. |
 
-The generic package never uses host-specific CPU flags. The native builder is
-for compiling and running on the same machine. Both installation paths produce normal Debian packages managed by APT. The
-generic amd64 package intentionally avoids a direct ELF dependency on a single
-ICU major so one package can span the supported Debian and Mint/Ubuntu bases.
+GitHub automatically provides `Source code (zip)` and `Source code (tar.gz)`
+for every tagged release. When one of those source archives is extracted, a
+normal `make` automatically retrieves the exact pinned Infiltratr Common source
+into `shared/infiltratr-common` if it is not already present. Calendar Plus and
+the shared library therefore remain separate source trees, but the person
+building Calendar Plus does not have to manage that relationship manually.
+
+The local `.run` builder already carries the required Calendar Plus and shared
+source trees in its verified payload. The generic package never uses
+host-specific CPU flags. Both installation paths produce normal Debian packages
+managed by APT. The generic amd64 package intentionally avoids a direct ELF
+dependency on a single ICU major so one package can span the supported Debian
+and Mint/Ubuntu bases.
 
 ## Install
 
@@ -93,16 +101,16 @@ On Debian 13, Linux Mint 22 or Ubuntu 24.04:
 sudo apt install build-essential clang-tidy debhelper gettext gcovr lintian \
     gir1.2-glib-2.0-dev \
     gobject-introspection gjs libglib2.0-dev libicu-dev nodejs pkg-config \
-    python3 ripgrep shellcheck zip
+    python3 ripgrep shellcheck zip git
 git clone --recurse-submodules https://github.com/The-First-Infiltrator/Calendar-Plus.git
 cd Calendar-Plus
 make check
 sudo make install
 ```
 
-GitHub's automatic source archives preserve the pinned dependency reference
-but do not expand submodules. After extracting one, run `make common-bootstrap`
-once before building.
+Git clones and GitHub's automatic source archives use the same pinned shared
+source version. If the shared tree is absent, the normal build retrieves the
+exact required release automatically; no manual submodule step is required.
 
 `make check` covers C reference/property tests, the adapter-free core,
 JavaScript lifecycle and syntax, GJS/typelib compatibility, exported symbols,
@@ -126,9 +134,9 @@ test.
   `clock-engine`, `event-core` and `event-source`.
 - Update the `shared/infiltratr-common` submodule only to a reviewed, tested
   Infiltratr Libraries release commit. Never edit a private application copy.
-- Infiltratr Common 1.1 owns strict scalar parsing, null-safe string predicates
-  and bounded numeric helpers in addition to the original metadata, file,
-  path, rate and formatting primitives.
+- Infiltratr Common 1.2 owns strict scalar parsing, null-safe string predicates,
+  bounded numeric helpers and the shared memory, disk, network, percentage,
+  frequency, temperature and power formatters.
 - Add built-in calendars and clocks through their provider tables, then run
   `make update-settings`.
 - After runtime JavaScript or JSON changes, run
@@ -141,7 +149,8 @@ test.
 - Existing entries in `tests/abi-baseline.txt` are historical ABI records and
   are not changed by routine releases; new API may add entries and version nodes.
 - A release updates `VERSION`, `metadata.json`, `SOURCE_DATE_EPOCH` and the top
-  Debian changelog entry, then publishes only the three files above.
+  Debian changelog entry, then publishes the `.deb` and `.run`; GitHub provides
+  the tagged source archives automatically.
 
 ## Model limits
 

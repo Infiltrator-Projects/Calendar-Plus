@@ -11,19 +11,18 @@ ARCH=amd64
 MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
 DEB="$DIST/calendar-plus_${VERSION}_${ARCH}.deb"
 RUN="$DIST/calendar-plus-${VERSION}-local-folder.run"
-ZIP="$DIST/Calendar-Plus-${VERSION}-local-source.zip"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 
-for artifact in "$DEB" "$RUN" "$ZIP"; do
+for artifact in "$DEB" "$RUN"; do
     [ -s "$artifact" ] || {
         echo "Missing release artifact: $artifact" >&2
         exit 1
     }
 done
 
-[ "$(find "$DIST" -maxdepth 1 -type f | wc -l)" -eq 3 ] || {
-    echo "The public release directory must contain exactly three files" >&2
+[ "$(find "$DIST" -maxdepth 1 -type f | wc -l)" -eq 2 ] || {
+    echo "The uploaded release directory must contain exactly two files" >&2
     exit 1
 }
 [ -x "$RUN" ] || {
@@ -75,57 +74,9 @@ LC_ALL=C sort -u "$ROOT/tests/exported-symbols.txt" > \
     "$TMP/generic-exports.expected"
 diff -u "$TMP/generic-exports.expected" "$TMP/generic-exports.actual"
 
-unzip -tq "$ZIP" >/dev/null
-unzip -Z1 "$ZIP" > "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/Makefile" "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/debian/control" "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/tools/local-installer.sh.in" \
-    "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/tests/test-release-model.py" \
-    "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/tests/test-abi.py" "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/tests/abi-baseline.txt" "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/src/about-dialog.c" "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/shared/infiltratr-common/VERSION" \
-    "$TMP/source-files"
-grep -qx \
-    "Calendar-Plus-${VERSION}/shared/infiltratr-common/include/infiltratr/core.h" \
-    "$TMP/source-files"
-grep -qx \
-    "Calendar-Plus-${VERSION}/shared/infiltratr-common/src/core.c" \
-    "$TMP/source-files"
-grep -qx "Calendar-Plus-${VERSION}/po/calendar-plus.pot" "$TMP/source-files"
-if grep -Eq '/(build|dist|__pycache__)/|\.py[co]$' "$TMP/source-files"; then
-    echo "Source ZIP contains transient build files" >&2
-    exit 1
-fi
-
-SOURCE_DATE_EPOCH=$(sed -n 's/^SOURCE_DATE_EPOCH ?= //p' "$ROOT/Makefile")
-python3 - "$ZIP" "$SOURCE_DATE_EPOCH" <<'PY'
-import datetime
-import sys
-import zipfile
-
-archive = sys.argv[1]
-epoch = int(sys.argv[2])
-expected = datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
-expected_tuple = expected.timetuple()[:6]
-with zipfile.ZipFile(archive) as source_zip:
-    mismatches = [
-        info.filename
-        for info in source_zip.infolist()
-        if info.date_time != expected_tuple
-    ]
-if mismatches:
-    raise SystemExit(
-        "Source ZIP timestamps are not SOURCE_DATE_EPOCH in UTC: "
-        + ", ".join(mismatches[:5])
-    )
-PY
-
 sed '/^__ARCHIVE_BELOW__$/q' "$RUN" > "$TMP/installer-header.sh"
 sh -n "$TMP/installer-header.sh"
 "$RUN" --verify-only >/dev/null
 
-printf 'Three-file release artifacts validated for Calendar Plus %s.\n' \
+printf 'Uploaded release artifacts validated for Calendar Plus %s.\n' \
     "$VERSION"

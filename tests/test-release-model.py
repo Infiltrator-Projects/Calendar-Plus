@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Shannon Smith
 
-"""Static contracts for Calendar Plus's three-file release model."""
+"""Static contracts for Calendar Plus's release model."""
 
 from __future__ import annotations
 
@@ -48,7 +48,9 @@ def main() -> None:
         "INFILTRATR_COMMON_COMMIT := "
         "b90cf49521bb8ecf85e46a39f67f1c0d0a0509b2"
     ) in makefile
-    assert "make common-bootstrap" in read("README.md")
+    assert "normal `make` automatically retrieves" in read("README.md")
+    assert "common-bootstrap: common-check" in makefile
+    assert "git clone --depth 1 --branch" in makefile
     assert "The-First-Infiltrator/Infiltrator-Libraries.git" in gitmodules
     assert "validate-translations" in makefile
     assert "CALENDAR_PLUS_BUILD_MODE ?= generic" in rules

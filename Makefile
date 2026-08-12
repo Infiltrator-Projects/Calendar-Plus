@@ -9,7 +9,7 @@ G_IR_COMPILER ?= g-ir-compiler
 PREFIX ?= /usr
 DESTDIR ?=
 
-VERSION := 3.9.2
+VERSION := 3.9.3
 UUID := calendar-plus@the-infiltratr
 BUILD_DIR := build
 DIST_DIR := dist
@@ -140,7 +140,7 @@ MATH_LIBS = -lm
 GIR_INCLUDE_PATH ?= $(shell $(PKG_CONFIG) --variable=libdir glib-2.0)/gir-1.0
 GIR_SHARE_INCLUDE_PATH ?= $(PREFIX)/share/gir-1.0
 
-SOURCE_DATE_EPOCH ?= 1786506720
+SOURCE_DATE_EPOCH ?= 1786574760
 COVERAGE_MIN_LINES ?= 65
 DIST_FILES := \
 	.github \
@@ -173,20 +173,25 @@ all: common-check check-deps \
 	$(BUILD_DIR)/$(ABOUT_BINARY) \
 	translations
 
-common-bootstrap:
+common-bootstrap: common-check
+	@:
+
+common-check:
 	@if test ! -f "$(INFILTRATR_COMMON_DIR)/VERSION"; then \
+		command -v git >/dev/null 2>&1 || { \
+			echo "git is required to retrieve the pinned shared source." >&2; \
+			exit 1; \
+		}; \
 		if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
 			git submodule update --init --depth 1 -- "$(INFILTRATR_COMMON_DIR)"; \
 		else \
+			mkdir -p "$(dir $(INFILTRATR_COMMON_DIR))"; \
 			git clone --depth 1 --branch "$(INFILTRATR_COMMON_TAG)" \
 				"$(INFILTRATR_COMMON_URL)" "$(INFILTRATR_COMMON_DIR)"; \
 		fi; \
 	fi
-	@$(MAKE) --no-print-directory common-check
-
-common-check:
 	@test -f "$(INFILTRATR_COMMON_DIR)/VERSION" || { \
-		echo "Infiltratr Common is missing; clone with --recurse-submodules or run 'make common-bootstrap'." >&2; \
+		echo "Unable to retrieve Infiltratr Common $(INFILTRATR_COMMON_VERSION)." >&2; \
 		exit 1; \
 	}
 	@test "$$(tr -d '[:space:]' < "$(INFILTRATR_COMMON_DIR)/VERSION")" = \
@@ -199,7 +204,6 @@ common-check:
 			echo "Infiltratr Common must be pinned to $(INFILTRATR_COMMON_COMMIT)." >&2; \
 			exit 1; \
 		fi
-
 check-deps: common-check
 	@command -v "$(PKG_CONFIG)" >/dev/null || { \
 		echo "Missing build dependency: pkg-config" >&2; exit 1; }
@@ -223,6 +227,9 @@ check-deps: common-check
 		echo "Missing test dependency: ripgrep" >&2; exit 1; }
 	@command -v gjs >/dev/null || { \
 		echo "Missing test dependency: gjs" >&2; exit 1; }
+
+$(INFILTRATR_COMMON_SOURCES) $(INFILTRATR_COMMON_HEADERS): | common-check
+	@test -f "$@" || { echo "Unable to materialize pinned Infiltratr Common source file: $@" >&2; exit 1; }
 
 $(BUILD_DIR)/%.o: src/%.c $(HEADERS)
 	@mkdir -p "$(BUILD_DIR)"

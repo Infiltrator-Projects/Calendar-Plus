@@ -1,3 +1,14 @@
+calendar-plus (3.9.3) trixie; urgency=medium
+
+  * Integrate the tagged Calendar Plus source with Infiltratr Common 1.2.0.
+  * Make ordinary source-archive builds retrieve the exact pinned shared C
+    source automatically when it is not already present, while keeping the two
+    source trees separate.
+  * Keep the end-user release flow unchanged: install the generic Debian package
+    or run the local hardware-native builder without managing shared sources.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Thu, 13 Aug 2026 08:46:00 +1000
+
 calendar-plus (3.9.2) trixie; urgency=medium
 
   * Re-license Calendar Plus-owned source, tests, scripts and documentation as
