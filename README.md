@@ -23,11 +23,12 @@ International Fixed, World and Positivist calendars.
 
 Calendar Plus has three deliberate layers:
 
-- `shared/infiltratr-common` is the versioned, BSD-licensed C11 foundation
-  shared with Linux System Monitor. It owns project identity, bounded strings,
-  overflow-safe arithmetic, binary quantity formatting and optional POSIX
-  file/path/clock adapters. Calendar Plus links the vendored archive statically,
-  so installing the applet does not create a fragile cross-package dependency.
+- `shared/infiltratr-common` is a Git submodule pinned to the GPL-3.0-or-later
+  C11 foundation in the [Infiltrator Libraries](https://github.com/The-First-Infiltrator/Infiltrator-Libraries)
+  repository. It owns project identity, bounded strings, overflow-safe
+  arithmetic, binary quantity formatting and optional POSIX file/path/clock
+  adapters. Calendar Plus links it statically, so the source has one canonical
+  owner without creating a cross-package runtime dependency.
 - The C core owns calendar arithmetic, alternative-clock calculations,
   boundary scheduling, the 42-cell grid and event interval semantics. Its
   records and callback interfaces do not depend on GObject, GVariant, GJS or a
@@ -93,9 +94,15 @@ sudo apt install build-essential clang-tidy debhelper gettext gcovr lintian \
     gir1.2-glib-2.0-dev \
     gobject-introspection gjs libglib2.0-dev libicu-dev nodejs pkg-config \
     python3 ripgrep shellcheck zip
+git clone --recurse-submodules https://github.com/The-First-Infiltrator/Calendar-Plus.git
+cd Calendar-Plus
 make check
 sudo make install
 ```
+
+GitHub's automatic source archives preserve the pinned dependency reference
+but do not expand submodules. After extracting one, run `make common-bootstrap`
+once before building.
 
 `make check` covers C reference/property tests, the adapter-free core,
 JavaScript lifecycle and syntax, GJS/typelib compatibility, exported symbols,
@@ -117,9 +124,8 @@ test.
 
 - Keep GObject, GVariant, GJS and toolkit assumptions out of `calendar-core`,
   `clock-engine`, `event-core` and `event-source`.
-- Treat `shared/infiltratr-common` as one versioned component. Synchronise the
-  complete directory between participating programs and bump its own `VERSION`
-  whenever its API or behaviour changes.
+- Update the `shared/infiltratr-common` submodule only to a reviewed, tested
+  Infiltratr Libraries release commit. Never edit a private application copy.
 - Infiltratr Common 1.1 owns strict scalar parsing, null-safe string predicates
   and bounded numeric helpers in addition to the original metadata, file,
   path, rate and formatting primitives.
@@ -157,7 +163,5 @@ The current runtime is independently implemented against Cinnamon's public
 interfaces. Releases through 3.3.0 retained the notices required by their
 Cinnamon-derived files; current provenance details are in `debian/copyright`.
 
-Calendar Plus is GPL-3.0-or-later. See `COPYING`. The vendored
-`shared/infiltratr-common` component retains its BSD-3-Clause licence and
-required upstream copyright notice; it is GPL-compatible and is documented in
-`debian/copyright`.
+Calendar Plus is GPL-3.0-or-later. The pinned Infiltratr Common dependency uses
+the same licence. See `COPYING` and the dependency's `LICENSE`.

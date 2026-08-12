@@ -14,7 +14,10 @@ UUID := calendar-plus@the-infiltratr
 BUILD_DIR := build
 DIST_DIR := dist
 INFILTRATR_COMMON_DIR := shared/infiltratr-common
-INFILTRATR_COMMON_VERSION := $(shell tr -d '[:space:]' < $(INFILTRATR_COMMON_DIR)/VERSION)
+INFILTRATR_COMMON_URL := https://github.com/The-First-Infiltrator/Infiltrator-Libraries.git
+INFILTRATR_COMMON_TAG := v1.1.1
+INFILTRATR_COMMON_COMMIT := 8e482639980f9b4ecd49313e3fc788ed36aee381
+INFILTRATR_COMMON_VERSION := 1.1.1
 LIB_BASENAME := calendar-plus
 LIB_SONAME := lib$(LIB_BASENAME).so.0
 LIB_REALNAME := lib$(LIB_BASENAME).so.0.0.0
@@ -151,7 +154,7 @@ DIST_FILES := \
 	tests \
 	tools
 
-.PHONY: all check check-deps clean core-check coverage install package-source \
+.PHONY: all check check-deps clean common-bootstrap common-check core-check coverage install package-source \
 	package-local-installer \
 	sanitize static-analysis test validate-architecture validate-js validate-package-inputs \
 	validate-sources validate-exports validate-abi validate-runtime-deps validate-release-model smoke-gjs \
@@ -159,7 +162,7 @@ DIST_FILES := \
 	reproducible-build translations update-pot validate-translations \
 	update-settings validate-settings-generated update-runtime-hashes
 
-all: check-deps \
+all: common-check check-deps \
 	$(INFILTRATR_COMMON_ARCHIVE) \
 	$(CORE_ARCHIVE) \
 	$(BUILD_DIR)/$(LIB_REALNAME) \
@@ -167,7 +170,34 @@ all: check-deps \
 	$(BUILD_DIR)/$(ABOUT_BINARY) \
 	translations
 
-check-deps:
+common-bootstrap:
+	@if test ! -f "$(INFILTRATR_COMMON_DIR)/VERSION"; then \
+		if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
+			git submodule update --init --depth 1 -- "$(INFILTRATR_COMMON_DIR)"; \
+		else \
+			git clone --depth 1 --branch "$(INFILTRATR_COMMON_TAG)" \
+				"$(INFILTRATR_COMMON_URL)" "$(INFILTRATR_COMMON_DIR)"; \
+		fi; \
+	fi
+	@$(MAKE) --no-print-directory common-check
+
+common-check:
+	@test -f "$(INFILTRATR_COMMON_DIR)/VERSION" || { \
+		echo "Infiltratr Common is missing; clone with --recurse-submodules or run 'make common-bootstrap'." >&2; \
+		exit 1; \
+	}
+	@test "$$(tr -d '[:space:]' < "$(INFILTRATR_COMMON_DIR)/VERSION")" = \
+		"$(INFILTRATR_COMMON_VERSION)" || { \
+		echo "Infiltratr Common $(INFILTRATR_COMMON_VERSION) is required." >&2; \
+		exit 1; \
+	}
+	@actual_commit=$$(git -C "$(INFILTRATR_COMMON_DIR)" rev-parse HEAD 2>/dev/null || true); \
+		if test -n "$$actual_commit" && test "$$actual_commit" != "$(INFILTRATR_COMMON_COMMIT)"; then \
+			echo "Infiltratr Common must be pinned to $(INFILTRATR_COMMON_COMMIT)." >&2; \
+			exit 1; \
+		fi
+
+check-deps: common-check
 	@command -v "$(PKG_CONFIG)" >/dev/null || { \
 		echo "Missing build dependency: pkg-config" >&2; exit 1; }
 	@$(G_IR_SCANNER) --version >/dev/null 2>&1 || { \
@@ -201,7 +231,7 @@ $(BUILD_DIR)/infiltratr-%.o: $(INFILTRATR_COMMON_DIR)/src/%.c \
 	$(CC) $(CPPFLAGS) $(CFLAGS) \
 		-frandom-seed=$(REPRO_SEED_PREFIX)-infiltratr-$* -MMD -MP -c $< -o $@
 
-$(INFILTRATR_COMMON_ARCHIVE): $(INFILTRATR_COMMON_OBJECTS)
+$(INFILTRATR_COMMON_ARCHIVE): $(INFILTRATR_COMMON_OBJECTS) | common-check
 	@rm -f "$@"
 	$(AR) rcsD "$@" $(INFILTRATR_COMMON_OBJECTS)
 
@@ -476,12 +506,12 @@ install: all
 	install -m644 "$(BUILD_DIR)/BUILD-INFO" \
 		"$(DESTDIR)$(PREFIX)/share/doc/calendar-plus/BUILD-INFO"
 
-package-source: validate-settings-generated
+package-source: common-check validate-settings-generated
 	@mkdir -p "$(DIST_DIR)"
 	@rm -rf "$(BUILD_DIR)/source-stage"
 	@mkdir -p "$(BUILD_DIR)/source-stage/Calendar-Plus-$(VERSION)"
-	@cp -a --parents $(DIST_FILES) \
-		"$(BUILD_DIR)/source-stage/Calendar-Plus-$(VERSION)"
+	@tar --exclude-vcs -cf - $(DIST_FILES) | \
+		tar -C "$(BUILD_DIR)/source-stage/Calendar-Plus-$(VERSION)" -xf -
 	@rm -rf \
 		"$(BUILD_DIR)/source-stage/Calendar-Plus-$(VERSION)/debian/.debhelper" \
 		"$(BUILD_DIR)/source-stage/Calendar-Plus-$(VERSION)/debian/calendar-plus" \

@@ -25,6 +25,7 @@ def main() -> None:
     builder = read("tools/build-local-installer.sh")
     release = read("tools/release-check.sh")
     workflow = read(".github/workflows/ci.yml")
+    gitmodules = read(".gitmodules")
 
     assert sorted(path.name for path in ROOT.glob("*.md")) == ["README.md"]
     assert "DEVELOPING.md" not in makefile
@@ -40,6 +41,12 @@ def main() -> None:
     assert "calendar-plus-about" in makefile
     assert "libinfiltratr-common.a" in makefile
     assert "shared/infiltratr-common" in makefile
+    assert (
+        "INFILTRATR_COMMON_COMMIT := "
+        "8e482639980f9b4ecd49313e3fc788ed36aee381"
+    ) in makefile
+    assert "make common-bootstrap" in read("README.md")
+    assert "The-First-Infiltrator/Infiltrator-Libraries.git" in gitmodules
     assert "validate-translations" in makefile
     assert "CALENDAR_PLUS_BUILD_MODE ?= generic" in rules
     assert "BUILD_MODE=$(CALENDAR_PLUS_BUILD_MODE)" in rules
@@ -66,6 +73,7 @@ def main() -> None:
     assert "tools/validate-release-artifacts.sh" in release
     assert "lintian --fail-on error" in release
     assert "actions/checkout@v" not in workflow
+    assert workflow.count("submodules: true") == 5
     assert "check-upstream-drift.sh" not in workflow
     assert "upstream-drift:" not in workflow
     assert "schedule:" not in workflow
@@ -182,19 +190,19 @@ def main() -> None:
         check=True,
     )
 
-    # Calendar Plus-owned code and documentation are GPL-3.0-or-later.
-    # The vendored common component remains BSD-3-Clause because its upstream
-    # notice includes another copyright holder and must not be rewritten.
+    # Calendar Plus and its canonical shared dependency are GPL-3.0-or-later.
     assert ("GPL-" + "2.0-or-later") not in read("README.md")
     assert "Calendar Plus is GPL-3.0-or-later" in read("README.md")
     assert "License: GPL-3+" in read("debian/copyright")
     assert "/usr/share/common-licenses/GPL-3" in read("debian/copyright")
-    assert "BSD 3-Clause License" in read("shared/infiltratr-common/LICENSE")
-    assert "Neeraj Kumar" in read("shared/infiltratr-common/LICENSE")
+    assert "GNU GENERAL PUBLIC LICENSE" in read(
+        "shared/infiltratr-common/LICENSE"
+    )
+    assert "BSD 3-Clause License" not in read("shared/infiltratr-common/LICENSE")
 
     project_owned_suffixes = {".c", ".h", ".js", ".py", ".sh", ".in", ".yml", ".yaml"}
     for path in ROOT.rglob("*"):
-        if not path.is_file() or "shared/infiltratr-common" in path.as_posix():
+        if not path.is_file() or ".git" in path.parts:
             continue
         if path.suffix not in project_owned_suffixes:
             continue
@@ -206,7 +214,8 @@ def main() -> None:
 
     forbidden = ("Chat" + "GPT", "Open" + "AI", "H" + "AL 9000")
     for path in ROOT.rglob("*"):
-        if not path.is_file() or path.parts[-2:-1] in (("build",), ("dist",)):
+        if (not path.is_file() or ".git" in path.parts or
+                path.parts[-2:-1] in (("build",), ("dist",))):
             continue
         if path.suffix not in {
             ".c", ".h", ".js", ".json", ".md", ".py", ".sh", ".in",

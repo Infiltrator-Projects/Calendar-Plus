@@ -4,8 +4,8 @@ calendar-plus (3.9.2) trixie; urgency=medium
     GPL-3.0-or-later and replace the project COPYING file with GNU GPL version 3.
   * Standardise SPDX licence markers across source formats without adding
     invalid comments to JSON or generated checksum data.
-  * Preserve the vendored Infiltratr Common BSD-3-Clause notice and copyright
-    metadata rather than misrepresenting third-party licensing.
+  * Use Shannon Smith's GPL-3.0-or-later Infiltratr Common source as the
+    canonical shared component.
   * Add release-model checks so GPL-2 identifiers cannot silently return to
     Calendar Plus-owned release inputs.
 

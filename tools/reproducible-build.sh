@@ -23,7 +23,8 @@ copy_source() {
     mkdir -p "$destination"
     (
         cd "$ROOT"
-        tar --exclude='./build' \
+        tar --exclude-vcs \
+            --exclude='./build' \
             --exclude='./dist' \
             --exclude='./debian/.debhelper' \
             --exclude='./debian/calendar-plus' \
@@ -33,7 +34,6 @@ copy_source() {
             --exclude='__pycache__' \
             --exclude='*.pyc' \
             --exclude='*.pyo' \
-            --exclude='./.git' \
             -cf - .
     ) | tar -C "$destination" -xf -
     find "$destination" -exec touch --date="@$SOURCE_DATE_EPOCH" {} +
