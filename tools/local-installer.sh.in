@@ -1,0 +1,198 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+set -eu
+
+VERSION="@VERSION@"
+NATIVE_REVISION="1"
+NATIVE_VERSION="${VERSION}+native${NATIVE_REVISION}"
+PAYLOAD_SHA256="@PAYLOAD_SHA256@"
+PAYLOAD_ROOT="Calendar-Plus-${VERSION}"
+BUILD_ONLY=0
+VERIFY_ONLY=0
+OUTPUT_DIR=$PWD
+
+usage() {
+    cat <<EOF
+Calendar Plus ${VERSION} local hardware-native builder
+
+Usage: $(basename "$0") [OPTIONS]
+
+  --build-only         Build the native Debian package without installing it
+  --output-dir DIR     Write the locally compiled package to DIR
+  --verify-only        Verify the embedded source payload and exit
+  -h, --help           Show this help
+
+With no options, the builder installs missing build dependencies, compiles
+Calendar Plus for this machine, creates a Debian-managed package and installs
+it through APT.
+EOF
+}
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --build-only)
+            BUILD_ONLY=1
+            ;;
+        --output-dir)
+            shift
+            [ "$#" -gt 0 ] || {
+                echo "--output-dir requires a directory" >&2
+                exit 2
+            }
+            OUTPUT_DIR=$1
+            ;;
+        --verify-only)
+            VERIFY_ONLY=1
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+    shift
+done
+
+for command_name in awk tail tar sha256sum mktemp; do
+    command -v "$command_name" >/dev/null 2>&1 || {
+        echo "Required command is missing: $command_name" >&2
+        exit 1
+    }
+done
+
+WORK_DIR=$(mktemp -d)
+# shellcheck disable=SC2317
+cleanup() {
+    rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT HUP INT TERM
+
+PAYLOAD_LINE=$(awk '/^__ARCHIVE_BELOW__$/ { print NR + 1; exit }' "$0")
+[ -n "$PAYLOAD_LINE" ] || {
+    echo "Embedded source payload marker is missing" >&2
+    exit 1
+}
+
+PAYLOAD="$WORK_DIR/local-source.tar.gz"
+tail -n "+$PAYLOAD_LINE" "$0" > "$PAYLOAD"
+printf '%s  %s\n' "$PAYLOAD_SHA256" "$PAYLOAD" | sha256sum --check --status || {
+    echo "Embedded source payload failed its SHA-256 integrity check" >&2
+    exit 1
+}
+
+if [ "$VERIFY_ONLY" -eq 1 ]; then
+    printf 'Calendar Plus %s embedded source verified: %s\n' \
+        "$VERSION" "$PAYLOAD_SHA256"
+    exit 0
+fi
+
+run_privileged() {
+    if [ "$(id -u)" -eq 0 ]; then
+        "$@"
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo "$@"
+    else
+        echo "Root access through sudo is required to install packages" >&2
+        exit 1
+    fi
+}
+
+install_build_dependencies() {
+    command -v apt-get >/dev/null 2>&1 || {
+        echo "APT is required to install Calendar Plus build dependencies" >&2
+        exit 1
+    }
+    run_privileged apt-get update
+    run_privileged apt-get install -y \
+        build-essential debhelper dpkg-dev gettext gir1.2-glib-2.0-dev \
+        gobject-introspection gjs libglib2.0-dev libicu-dev nodejs \
+        pkg-config python3 ripgrep
+}
+
+tar -xzf "$PAYLOAD" -C "$WORK_DIR"
+SOURCE_DIR="$WORK_DIR/$PAYLOAD_ROOT"
+if [ ! -f "$SOURCE_DIR/Makefile" ] ||
+   [ ! -f "$SOURCE_DIR/debian/control" ]; then
+    echo "Embedded source archive is incomplete" >&2
+    exit 1
+fi
+
+if ! command -v dpkg-checkbuilddeps >/dev/null 2>&1 ||
+   ! (cd "$SOURCE_DIR" && dpkg-checkbuilddeps >/dev/null 2>&1); then
+    install_build_dependencies
+fi
+
+for command_name in dpkg-buildpackage dpkg-deb dpkg-architecture sed install; do
+    command -v "$command_name" >/dev/null 2>&1 || {
+        echo "Required build command is missing: $command_name" >&2
+        exit 1
+    }
+done
+
+ARCH=$(dpkg-architecture -qDEB_HOST_ARCH)
+MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
+sed -i \
+    "1s/calendar-plus (${VERSION})/calendar-plus (${NATIVE_VERSION})/" \
+    "$SOURCE_DIR/debian/changelog"
+grep -q "^calendar-plus (${NATIVE_VERSION}) " \
+    "$SOURCE_DIR/debian/changelog" || {
+        echo "Unable to prepare the local native package version" >&2
+        exit 1
+    }
+
+printf 'Building Calendar Plus %s for local architecture %s.\n' \
+    "$NATIVE_VERSION" "$ARCH"
+printf 'Native optimisation: -O3 -march=native -mtune=native -flto=auto\n'
+
+(
+    cd "$SOURCE_DIR"
+    CALENDAR_PLUS_BUILD_MODE=native \
+        dpkg-buildpackage -us -uc -b
+)
+
+BUILT_DEB="$WORK_DIR/calendar-plus_${NATIVE_VERSION}_${ARCH}.deb"
+[ -s "$BUILT_DEB" ] || {
+    echo "Native Debian package was not produced" >&2
+    exit 1
+}
+[ "$(dpkg-deb -f "$BUILT_DEB" Package)" = "calendar-plus" ]
+[ "$(dpkg-deb -f "$BUILT_DEB" Version)" = "$NATIVE_VERSION" ]
+[ "$(dpkg-deb -f "$BUILT_DEB" Architecture)" = "$ARCH" ]
+
+PACKAGE_ROOT="$WORK_DIR/package-root"
+dpkg-deb -x "$BUILT_DEB" "$PACKAGE_ROOT"
+grep -q '^Build mode: local hardware-native ' \
+    "$PACKAGE_ROOT/usr/share/doc/calendar-plus/BUILD-INFO"
+test -f "$PACKAGE_ROOT/usr/lib/$MULTIARCH/libcalendar-plus.so.0.0.0"
+test -f \
+    "$PACKAGE_ROOT/usr/lib/$MULTIARCH/girepository-1.0/CalendarPlus-1.0.typelib"
+test -x "$PACKAGE_ROOT/usr/libexec/calendar-plus-about"
+test -f \
+    "$PACKAGE_ROOT/usr/share/locale/en_AU/LC_MESSAGES/calendar-plus@the-infiltratr.mo"
+"$PACKAGE_ROOT/usr/libexec/calendar-plus-about" --print-metadata |
+    grep -qx "version=$VERSION"
+
+mkdir -p "$OUTPUT_DIR"
+OUTPUT_DIR=$(CDPATH='' cd -- "$OUTPUT_DIR" && pwd)
+OUTPUT_DEB="$OUTPUT_DIR/calendar-plus_${NATIVE_VERSION}_${ARCH}.deb"
+install -m 0644 "$BUILT_DEB" "$OUTPUT_DEB"
+
+if [ "$BUILD_ONLY" -eq 0 ]; then
+    run_privileged apt-get install -y "$OUTPUT_DEB"
+    printf 'Calendar Plus %s is installed and managed by APT.\n' \
+        "$NATIVE_VERSION"
+else
+    printf 'Calendar Plus native package built without installation.\n'
+fi
+
+printf 'Package: %s\n' "$OUTPUT_DEB"
+exit 0
+
+# shellcheck disable=SC2317
+__ARCHIVE_BELOW__

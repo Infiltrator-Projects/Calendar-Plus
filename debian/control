@@ -1,0 +1,35 @@
+Source: calendar-plus
+Section: x11
+Priority: optional
+Maintainer: The Infiltratr <noreply@the-infiltratr.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ gettext,
+ gir1.2-glib-2.0-dev,
+ gobject-introspection,
+ gjs,
+ libglib2.0-dev,
+ libicu-dev,
+ nodejs,
+ pkg-config,
+ python3,
+ ripgrep
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+
+Package: calendar-plus
+Architecture: any
+Depends:
+ cinnamon (>= 6.4),
+ libicu76 | libicu74 | libicu78,
+ ${misc:Depends},
+ ${shlibs:Depends}
+Description: Cinnamon clock with multiple time and calendar systems
+ Calendar Plus integrates with Cinnamon's panel, popup, settings and calendar
+ service while adding decimal, Internet, Unix, hexadecimal, binary, sidereal,
+ solar, Julian Date, mean-solar, Modified Julian, traditional Chinese, Roman
+ temporal and Edo Japanese clock modes plus 22 civil, religious, historical
+ and experimental calendar systems. A platform-neutral C core handles conversion,
+ grid construction, event intervals and precise scheduling; thin native and
+ JavaScript adapters provide Cinnamon integration. The same amd64 package can
+ use the system ICU supplied by Ubuntu/Mint or Debian.

@@ -1,0 +1,224 @@
+calendar-plus (3.9.2) trixie; urgency=medium
+
+  * Re-license Calendar Plus-owned source, tests, scripts and documentation as
+    GPL-3.0-or-later and replace the project COPYING file with GNU GPL version 3.
+  * Standardise SPDX licence markers across source formats without adding
+    invalid comments to JSON or generated checksum data.
+  * Preserve the vendored Infiltratr Common BSD-3-Clause notice and copyright
+    metadata rather than misrepresenting third-party licensing.
+  * Add release-model checks so GPL-2 identifiers cannot silently return to
+    Calendar Plus-owned release inputs.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Wed, 12 Aug 2026 13:52:00 +1000
+
+calendar-plus (3.9.1) trixie; urgency=medium
+
+  * Make shared floating-point parsing use an explicit ASCII decimal grammar
+    rather than locale-sensitive strtod(), so location-bearing clock modes are
+    deterministic under comma-decimal desktop locales.
+  * Require the generic package to be the ordinary monolithic source build and
+    reject compatibility-split libcalendar-base/libcpicu assemblies.
+  * Validate the complete published symbol set and versioned ABI directly from
+    the packaged generic libcalendar-plus.so.0.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Wed, 12 Aug 2026 08:05:00 +1000
+
+calendar-plus (3.9.0) trixie; urgency=medium
+
+  * Expand Infiltratr Common to 1.1.0 with strict numeric parsing, null-safe
+    string predicates and toolkit-neutral floating-point clamping.
+  * Replace Calendar Plus's local GLib/string, strtod and CLAMP call patterns
+    with the shared implementations while preserving the published ABI.
+  * Extend the shared regression suite across parsing, overflow, null strings,
+    prefixes, suffixes and numeric bounds.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 11 Aug 2026 22:15:00 +1000
+
+calendar-plus (3.8.2) trixie; urgency=medium
+
+  * Correct the vertical Chinese-time regression test to expect the accented
+    pinyin emitted by the production formatter.
+  * Assert that narrow-panel formatting preserves tone marks while changing
+    only the field separators.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 11 Aug 2026 21:31:00 +1000
+
+calendar-plus (3.8.1) trixie; urgency=medium
+
+  * Correct the native test harness so latitude is encoded only for the Roman
+    and Japanese temporal modes that accept a location-bearing mode token.
+  * Add regression checks that ordinary clock modes reject latitude suffixes
+    while both latitude-dependent temporal modes continue to accept them.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 11 Aug 2026 21:15:00 +1000
+
+calendar-plus (3.8.0) trixie; urgency=medium
+
+  * Adopt the versioned Infiltratr Common C11 library shared with Linux System
+    Monitor for project identity, safe strings, numeric primitives and POSIX
+    adapters while retaining self-contained Debian packages.
+  * Make the native library and About helper consume one project-information
+    record and expose the shared-component version in build metadata.
+  * Include and validate the complete common-library source in both the source
+    archive and hardware-native installer payload.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 11 Aug 2026 20:40:00 +1000
+
+calendar-plus (3.7.1) trixie; urgency=medium
+
+  * Restore Debian 13 as a first-class target: support Cinnamon 6.4 alongside
+    the current Mint 6.6/6.7 module paths and remove the obsolete GTK package
+    name from runtime dependencies.
+  * Load the small ICU C calendar surface through an internal runtime ABI bridge so
+    one generic amd64 package can use ICU 74 on Mint/Ubuntu or ICU 76 on Debian
+    without embedding a build-host ICU SONAME.
+  * Rebalance the popup month column responsively when the agenda is visible,
+    reducing the cramped calendar layout without hard-coded theme dimensions.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 11 Aug 2026 19:10:00 +1000
+
+calendar-plus (3.7.0) noble; urgency=medium
+
+  * Add five real-world time systems: local mean solar time, Modified Julian
+    Date, traditional Chinese double-hours, Roman temporal hours/night watches,
+    and Edo Japanese seasonal time.
+  * Add latitude-aware solar boundary calculations while preserving the
+    published 2.0 C/GI ABI and CalendarPlusClockConfig layout.
+  * Carry seasonal-clock latitude through the existing internal mode token;
+    extend registry, settings and regression coverage to all 13 native clocks.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 11 Aug 2026 14:50:00 +1000
+
+calendar-plus (3.6.2) noble; urgency=medium
+
+  * Harden calendar reference, ABI, packaging and release validation gates.
+  * Run the architecture boundary check from every Debian package build.
+  * Strengthen static analysis, coverage, leak and Cinnamon smoke checks.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 11 Aug 2026 14:27:00 +1000
+
+calendar-plus (3.6.1) noble; urgency=medium
+
+  * Remove the remaining GObject facade includes from neutral calendar-provider
+    headers; portable calendar code now depends only on base types and GLib/ICU.
+  * Make the architecture gate walk the complete local include closure of every
+    core source/header and reject adapter, GObject, GVariant, GJS or GUI-loop
+    contamination with an include-chain diagnostic.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Mon, 10 Aug 2026 22:27:00 +1000
+
+calendar-plus (3.6.0) noble; urgency=medium
+
+  * Add adapter-free calendar, clock and event cores with ordinary C records,
+    injected scheduling and a versioned event-source boundary.
+  * Isolate GObject, GVariant, GJS and GLib-main-loop compatibility adapters;
+    add core-only and architecture regression tests.
+  * Audit comments against implementation contracts and consolidate maintained
+    user/developer guidance into one concise README.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Mon, 10 Aug 2026 14:00:00 +1000
+
+calendar-plus (3.5.1) noble; urgency=medium
+
+  * Route every About action to the standard native GTK dialog and present one
+    consistent user-facing application identity.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Sun, 09 Aug 2026 01:50:00 +1000
+
+calendar-plus (3.5.0) noble; urgency=medium
+
+  * Add versioned calendar/time provider tables and generate settings choices
+    from provider metadata.
+  * Separate shared GJS lifecycle support, panel-clock policy, CalendarServer
+    transport and agenda presentation.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Sun, 09 Aug 2026 01:10:00 +1000
+
+calendar-plus (3.4.0) noble; urgency=medium
+
+  * Replace the remaining Cinnamon-derived runtime with an independent
+    implementation against public Cinnamon interfaces.
+  * Make native C authoritative for the 42-cell grid, event intervals and
+    alternative-clock scheduling.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Sat, 08 Aug 2026 23:55:00 +1000
+
+calendar-plus (3.3.0) noble; urgency=medium
+
+  * Add the native About dialog, Calendar Plus gettext domain, keyboard and
+    accessibility improvements, and tested Cinnamon 6.6/6.7 compatibility.
+  * Harden tuple validation, timezone refresh and release reproducibility.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Sat, 08 Aug 2026 23:41:00 +1000
+
+calendar-plus (3.2.4) noble; urgency=medium
+
+  * Establish the three-file release: generic amd64 package, self-contained
+    hardware-native builder and complete source ZIP.
+  * Keep generic builds conservative and reproducible; package local builds as
+    `<source-version>+native1` with native CPU tuning and LTO.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Sat, 08 Aug 2026 21:45:00 +1000
+
+calendar-plus (3.2.0) noble; urgency=medium
+
+  * Add native source identity, typed date navigation, work-day/event
+    semantics, deterministic teardown and expanded quality gates.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Sat, 08 Aug 2026 19:47:00 +1000
+
+calendar-plus (3.1.0) noble; urgency=medium
+
+  * Make applet construction and D-Bus/signal/timer teardown deterministic;
+    split native calendar modules and enforce the exported ABI.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Fri, 31 Jul 2026 19:40:00 +1000
+
+calendar-plus (3.0.0) noble; urgency=medium
+
+  * Split calendar metadata, JDN arithmetic and ICU integration; replace the
+    event-duration cap with interval queries and add property tests.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Thu, 30 Jul 2026 00:45:00 +1000
+
+calendar-plus (2.5.0) noble; urgency=medium
+
+  * Move the 42-cell grid and event parsing, indexing, ordering and culling
+    into native C while retaining Cinnamon transport and rendering.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Wed, 29 Jul 2026 23:35:00 +1000
+
+calendar-plus (2.4.0) noble; urgency=medium
+
+  * Add 22 primary calendar systems, optional secondary dates and native
+    conversion, formatting and selected-calendar navigation.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Wed, 29 Jul 2026 22:30:00 +1000
+
+calendar-plus (2.3.0) noble; urgency=medium
+
+  * Add standard 12/24-hour, Internet, Unix, hexadecimal, binary, sidereal,
+    solar and Julian Date clock modes with boundary-aligned scheduling.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Wed, 29 Jul 2026 21:15:00 +1000
+
+calendar-plus (2.2.0) noble; urgency=medium
+
+  * Restore the per-applet seconds preference for conventional and decimal
+    clocks independently of Cinnamon's system-wide seconds setting.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Wed, 29 Jul 2026 20:15:00 +1000
+
+calendar-plus (2.1.0) noble; urgency=medium
+
+  * Move live decimal-clock timing into native C and align updates to visible
+    decimal boundaries instead of polling.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Wed, 29 Jul 2026 19:30:00 +1000
+
+calendar-plus (2.0.0) noble; urgency=medium
+
+  * Restore Cinnamon panel/calendar integration and add the first in-process
+    native C decimal-time engine.
+
+ -- The Infiltratr <noreply@the-infiltratr.com>  Tue, 28 Jul 2026 22:30:00 +1000

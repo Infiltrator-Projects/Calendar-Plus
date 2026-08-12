@@ -1,0 +1,17 @@
+{
+    "uuid": "calendar-plus@the-infiltratr",
+    "name": "Calendar Plus",
+    "description": "The Cinnamon clock and calendar with multiple time and calendar systems",
+    "author": "Shannon Smith",
+    "icon": "gnome-calendar",
+    "max-instances": -1,
+    "cinnamon-version": [
+        "6.4",
+        "6.6",
+        "6.7"
+    ],
+    "version": "3.9.2",
+    "gettext-domain": "calendar-plus@the-infiltratr",
+    "website": "https://github.com/The-Infiltratr",
+    "license": "GPL-3.0-or-later"
+}
