@@ -37,6 +37,9 @@ def main() -> None:
     assert "override CFLAGS += $(NATIVE_CFLAGS) $(COMMON_CFLAGS)" in makefile
     assert "Calendar-Plus-$(VERSION)-local-source.zip" in makefile
     assert "TZ=UTC zip -X -9 -q" in makefile
+    assert "\n\t.gitmodules \\\n" in makefile
+    assert "--exclude='*/.git'" in makefile
+    assert "--exclude-vcs" not in read("tools/reproducible-build.sh")
     assert "calendar-plus-$(VERSION)-local-folder.run" in makefile
     assert "calendar-plus-about" in makefile
     assert "libinfiltratr-common.a" in makefile

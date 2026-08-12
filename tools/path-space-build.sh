@@ -22,7 +22,8 @@ mkdir -p "$TARGET"
         --exclude='__pycache__' \
         --exclude='*.pyc' \
         --exclude='*.pyo' \
-        --exclude='./.git' \
+        --exclude='.git' \
+        --exclude='*/.git' \
         -cf - .
 ) | tar -C "$TARGET" -xf -
 

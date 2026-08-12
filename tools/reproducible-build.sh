@@ -23,7 +23,8 @@ copy_source() {
     mkdir -p "$destination"
     (
         cd "$ROOT"
-        tar --exclude-vcs \
+        tar --exclude='.git' \
+            --exclude='*/.git' \
             --exclude='./build' \
             --exclude='./dist' \
             --exclude='./debian/.debhelper' \

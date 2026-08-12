@@ -142,6 +142,7 @@ SOURCE_DATE_EPOCH ?= 1786506720
 COVERAGE_MIN_LINES ?= 65
 DIST_FILES := \
 	.github \
+	.gitmodules \
 	COPYING \
 	Makefile \
 	README.md \
@@ -510,7 +511,7 @@ package-source: common-check validate-settings-generated
 	@mkdir -p "$(DIST_DIR)"
 	@rm -rf "$(BUILD_DIR)/source-stage"
 	@mkdir -p "$(BUILD_DIR)/source-stage/Calendar-Plus-$(VERSION)"
-	@tar --exclude-vcs -cf - $(DIST_FILES) | \
+	@tar --exclude='.git' --exclude='*/.git' -cf - $(DIST_FILES) | \
 		tar -C "$(BUILD_DIR)/source-stage/Calendar-Plus-$(VERSION)" -xf -
 	@rm -rf \
 		"$(BUILD_DIR)/source-stage/Calendar-Plus-$(VERSION)/debian/.debhelper" \
