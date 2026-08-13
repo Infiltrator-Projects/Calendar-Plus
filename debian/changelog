@@ -1,3 +1,14 @@
+calendar-plus (3.9.5) trixie; urgency=medium
+
+  * Use only the portable Infiltratr Common core and formatting provider; stop
+    compiling the unused POSIX provider into Calendar Plus.
+  * Keep the exact Infiltratr Common 1.4.0 release pin while reducing the
+    consumer footprint to the shared capabilities Calendar actually uses.
+  * Correct path-with-spaces build validation so GCC and Clang use their own
+    active compiler triplets consistently.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Thu, 13 Aug 2026 20:03:00 +1000
+
 calendar-plus (3.9.4) trixie; urgency=medium
 
   * Publish Calendar Plus against Infiltratr Common 1.4.0.

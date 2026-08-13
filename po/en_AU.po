@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Calendar Plus 3.9.4\n"
+"Project-Id-Version: Calendar Plus 3.9.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 08:57+0000\n"
-"PO-Revision-Date: 2026-08-13 08:57+0000\n"
+"POT-Creation-Date: 2026-08-13 10:03+0000\n"
+"PO-Revision-Date: 2026-08-13 10:03+0000\n"
 "Last-Translator: Shannon Smith\n"
 "Language-Team: en_AU\n"
 "Language: en_AU\n"
