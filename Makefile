@@ -79,15 +79,14 @@ PRIVATE_HEADERS := \
 	src/calendar-system-private.h \
 	src/event-store-private.h
 HEADERS := $(sort $(PUBLIC_HEADERS) $(CORE_HEADERS) $(PRIVATE_HEADERS))
+# Calendar Plus consumes the POSIX-free Common core and formatting layer.
 INFILTRATR_COMMON_SOURCES := \
 	$(INFILTRATR_COMMON_DIR)/src/core.c \
-	$(INFILTRATR_COMMON_DIR)/src/format.c \
-	$(INFILTRATR_COMMON_DIR)/src/posix.c
+	$(INFILTRATR_COMMON_DIR)/src/format.c
 INFILTRATR_COMMON_HEADERS := \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/compiler.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/core.h \
-	$(INFILTRATR_COMMON_DIR)/include/infiltratr/format.h \
-	$(INFILTRATR_COMMON_DIR)/include/infiltratr/posix.h
+	$(INFILTRATR_COMMON_DIR)/include/infiltratr/format.h
 INFILTRATR_COMMON_OBJECTS := \
 	$(patsubst $(INFILTRATR_COMMON_DIR)/src/%.c,$(BUILD_DIR)/infiltratr-%.o,$(INFILTRATR_COMMON_SOURCES))
 INFILTRATR_COMMON_ARCHIVE := $(BUILD_DIR)/libinfiltratr-common.a
@@ -354,7 +353,7 @@ $(BUILD_DIR)/test-portable-core: \
 		$(ICU_BRIDGE_LIBS) $(MATH_LIBS)
 
 $(BUILD_DIR)/test-infiltratr-common: \
-		$(INFILTRATR_COMMON_DIR)/tests/core_smoke.c \
+		$(INFILTRATR_COMMON_DIR)/tests/portable_smoke.c \
 		$(INFILTRATR_COMMON_ARCHIVE)
 	$(CC) $(CPPFLAGS) $(CFLAGS) \
 		-frandom-seed=$(REPRO_SEED_PREFIX)-infiltratr-common-test $< \

@@ -36,7 +36,10 @@ make -C "$TARGET" all >/dev/null
     debian/rules override_dh_auto_install >/dev/null
 )
 
-MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
+# The Makefile derives its library directory from the selected compiler's
+# target triplet. Clang may report x86_64-pc-linux-gnu while GCC reports
+# x86_64-linux-gnu, so validate the directory the build actually selected.
+MULTIARCH=$(${CC:-cc} -dumpmachine)
 STAGE="$TARGET/debian/calendar-plus"
 test -f "$STAGE/usr/lib/$MULTIARCH/libcalendar-plus.so.0.0.0"
 test -f "$STAGE/usr/lib/$MULTIARCH/girepository-1.0/CalendarPlus-1.0.typelib"
