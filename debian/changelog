@@ -1,3 +1,13 @@
+calendar-plus (3.9.4) trixie; urgency=medium
+
+  * Publish Calendar Plus against Infiltratr Common 1.4.0.
+  * Keep the exact pinned Common 1.4.0 source in the hardware-native installer
+    payload and in ordinary source builds without adding a runtime dependency.
+  * Refresh release metadata and public packages so the downloadable release
+    matches the shared-library version used by the current source tree.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Thu, 13 Aug 2026 19:05:00 +1000
+
 calendar-plus (3.9.3) trixie; urgency=medium
 
   * Integrate the tagged Calendar Plus source with Infiltratr Common 1.2.0.
