@@ -31,6 +31,8 @@ typedef struct
     void (*set_website)(GtkAboutDialog *about, const gchar *website);
     void (*set_website_label)(GtkAboutDialog *about, const gchar *label);
     void (*set_copyright)(GtkAboutDialog *about, const gchar *copyright_text);
+    void (*set_license)(GtkAboutDialog *about, const gchar *license);
+    void (*set_wrap_license)(GtkAboutDialog *about, gboolean wrap_license);
     void (*set_logo_icon_name)(GtkAboutDialog *about, const gchar *icon_name);
     void (*set_authors)(GtkAboutDialog *about, const gchar **authors);
     void (*window_set_title)(GtkWindow *window, const gchar *title);
@@ -68,6 +70,8 @@ load_gtk(void)
     LOAD_GTK(set_website, "gtk_about_dialog_set_website");
     LOAD_GTK(set_website_label, "gtk_about_dialog_set_website_label");
     LOAD_GTK(set_copyright, "gtk_about_dialog_set_copyright");
+    LOAD_GTK(set_license, "gtk_about_dialog_set_license");
+    LOAD_GTK(set_wrap_license, "gtk_about_dialog_set_wrap_license");
     LOAD_GTK(set_logo_icon_name, "gtk_about_dialog_set_logo_icon_name");
     LOAD_GTK(set_authors, "gtk_about_dialog_set_authors");
     LOAD_GTK(window_set_title, "gtk_window_set_title");
@@ -91,9 +95,14 @@ static GtkWidget *
 create_about_dialog(void)
 {
     static const gchar *authors[] = {
-        "Shannon Smith — author and maintainer",
+        "Shannon Smith — Author and project maintainer",
         NULL
     };
+    static const gchar *license =
+        "Calendar Plus is free software licensed under the GNU General Public "
+        "License version 3 or, at your option, any later version "
+        "(GPL-3.0-or-later).\n\n"
+        "See COPYING in the source package for the complete licence text.";
     GtkWidget *widget = gtk_api.about_dialog_new();
     GtkAboutDialog *about = (GtkAboutDialog *) widget;
     const InfiltratrProjectInfo *info = calendar_plus_project_info();
@@ -103,13 +112,14 @@ create_about_dialog(void)
     gtk_api.set_version(about, info->version);
     gtk_api.set_logo_icon_name(about, info->icon_name);
     gtk_api.set_comments(about, _(info->comments));
+    gtk_api.set_authors(about, authors);
     gtk_api.set_website(about, info->website);
     gtk_api.set_website_label(about, _("Website"));
     gtk_api.set_copyright(about, _(info->copyright_text));
-    gtk_api.set_authors(about, authors);
+    gtk_api.set_license(about, license);
+    gtk_api.set_wrap_license(about, TRUE);
     return widget;
 }
-
 int
 main(int argc,
      char **argv)

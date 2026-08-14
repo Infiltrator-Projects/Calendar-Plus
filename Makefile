@@ -9,7 +9,7 @@ G_IR_COMPILER ?= g-ir-compiler
 PREFIX ?= /usr
 DESTDIR ?=
 
-VERSION := 3.9.6
+VERSION := 3.9.7
 UUID := calendar-plus@the-infiltratr
 BUILD_DIR := build
 DIST_DIR := dist
@@ -139,7 +139,7 @@ MATH_LIBS = -lm
 GIR_INCLUDE_PATH ?= $(shell $(PKG_CONFIG) --variable=libdir glib-2.0)/gir-1.0
 GIR_SHARE_INCLUDE_PATH ?= $(PREFIX)/share/gir-1.0
 
-SOURCE_DATE_EPOCH ?= 1786682280
+SOURCE_DATE_EPOCH ?= 1786684560
 COVERAGE_MIN_LINES ?= 65
 DIST_FILES := \
 	.github \

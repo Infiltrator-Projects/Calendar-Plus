@@ -1,3 +1,12 @@
+calendar-plus (3.9.7) trixie; urgency=medium
+
+  * Standardise the About dialog on the Linux Defragger GTK layout.
+  * Add the matching Credits, License and Close button set and wrapped
+    GPL-3.0-or-later licence presentation.
+  * Preserve Calendar Plus specific identity, description, icon and website.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Fri, 14 Aug 2026 15:16:00 +1000
+
 calendar-plus (3.9.6) trixie; urgency=medium
 
   * Synchronise the pinned shared C foundation with Infiltratr Common 1.5.0.
