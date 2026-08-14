@@ -134,7 +134,7 @@ test.
   `clock-engine`, `event-core` and `event-source`.
 - Update the `shared/infiltratr-common` submodule only to a reviewed, tested
   Infiltratr Libraries release commit. Never edit a private application copy.
-- Infiltratr Common 1.4 owns strict scalar parsing, null-safe string predicates,
+- Infiltratr Common 1.5 owns strict scalar parsing, null-safe string predicates,
   bounded numeric helpers and the shared memory, disk, network, percentage,
   frequency, temperature and power formatters.
 - Add built-in calendars and clocks through their provider tables, then run

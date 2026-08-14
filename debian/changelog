@@ -1,3 +1,12 @@
+calendar-plus (3.9.6) trixie; urgency=medium
+
+  * Synchronise the pinned shared C foundation with Infiltratr Common 1.5.0.
+  * Keep Calendar Plus on the portable Common core and formatting footprint;
+    the new checked-arithmetic API is available without adding POSIX code.
+  * Re-run the complete release, ABI, reproducibility and native-installer gates.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Fri, 14 Aug 2026 14:38:00 +1000
+
 calendar-plus (3.9.5) trixie; urgency=medium
 
   * Use only the portable Infiltratr Common core and formatting provider; stop

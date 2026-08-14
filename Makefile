@@ -9,15 +9,15 @@ G_IR_COMPILER ?= g-ir-compiler
 PREFIX ?= /usr
 DESTDIR ?=
 
-VERSION := 3.9.5
+VERSION := 3.9.6
 UUID := calendar-plus@the-infiltratr
 BUILD_DIR := build
 DIST_DIR := dist
 INFILTRATR_COMMON_DIR := shared/infiltratr-common
 INFILTRATR_COMMON_URL := https://github.com/The-First-Infiltrator/Infiltrator-Libraries.git
-INFILTRATR_COMMON_TAG := v1.4.0
-INFILTRATR_COMMON_COMMIT := e4547c49400875da3e1a5638366903a01374b350
-INFILTRATR_COMMON_VERSION := 1.4.0
+INFILTRATR_COMMON_TAG := v1.5.0
+INFILTRATR_COMMON_COMMIT := a0e75ffbe4e038c74c8f1e3d589f2dae87b2b7bb
+INFILTRATR_COMMON_VERSION := 1.5.0
 LIB_BASENAME := calendar-plus
 LIB_SONAME := lib$(LIB_BASENAME).so.0
 LIB_REALNAME := lib$(LIB_BASENAME).so.0.0.0
@@ -139,7 +139,7 @@ MATH_LIBS = -lm
 GIR_INCLUDE_PATH ?= $(shell $(PKG_CONFIG) --variable=libdir glib-2.0)/gir-1.0
 GIR_SHARE_INCLUDE_PATH ?= $(PREFIX)/share/gir-1.0
 
-SOURCE_DATE_EPOCH ?= 1786615380
+SOURCE_DATE_EPOCH ?= 1786682280
 COVERAGE_MIN_LINES ?= 65
 DIST_FILES := \
 	.github \
