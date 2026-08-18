@@ -138,7 +138,7 @@ MATH_LIBS = -lm
 GIR_INCLUDE_PATH ?= $(shell $(PKG_CONFIG) --variable=libdir glib-2.0)/gir-1.0
 GIR_SHARE_INCLUDE_PATH ?= $(PREFIX)/share/gir-1.0
 
-SOURCE_DATE_EPOCH ?= 1786684560
+SOURCE_DATE_EPOCH ?= 1787051520
 COVERAGE_MIN_LINES ?= 65
 DIST_FILES := \
 	.github \
@@ -389,7 +389,7 @@ validate-exports: $(BUILD_DIR)/$(LIB_REALNAME)
 	@command -v nm >/dev/null || { \
 		echo "Missing validation dependency: nm" >&2; exit 1; }
 	@nm -D --defined-only --format=posix "$(BUILD_DIR)/$(LIB_REALNAME)" | \
-		awk '$1 ~ /^calendar_plus_/ { sub(/@.*/, "", $1); print $1 }' | LC_ALL=C sort -u > \
+		awk '$$1 ~ /^calendar_plus_/ { sub(/@.*/, "", $$1); print $$1 }' | LC_ALL=C sort -u > \
 		"$(BUILD_DIR)/exported-symbols.actual"
 	@LC_ALL=C sort -u tests/exported-symbols.txt > \
 		"$(BUILD_DIR)/exported-symbols.expected"
