@@ -151,7 +151,7 @@ def main() -> None:
     assert "libcalendar-base.so.0" in read("tools/validate-release-artifacts.sh")
     assert "libcpicu.so.0" in read("tools/validate-release-artifacts.sh")
     assert "strtod(text" not in read("shared/infiltratr-common/src/core.c")
-    assert "independent of LC_NUMERIC" in read(
+    assert "independently of LC_NUMERIC" in read(
         "shared/infiltratr-common/include/infiltratr/core.h"
     )
     assert "--fail-under-line $(COVERAGE_MIN_LINES)" in makefile
