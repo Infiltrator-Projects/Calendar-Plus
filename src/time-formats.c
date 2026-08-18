@@ -5,8 +5,8 @@
  * Native clock-provider registry, formatting and tick scheduling.
  *
  * Each mode is one provider containing metadata plus paired format/delay
- * callbacks.  Adding a time system therefore extends one table instead of two
- * central switches.  The provider boundary also guarantees that the formula
+ * callbacks. Adding a time system therefore extends one table instead of two
+ * central switches. The provider boundary also guarantees that the formula
  * used to display a mode and the formula used to schedule its next update stay
  * together as one implementation unit.
  *
@@ -18,6 +18,7 @@
 #include "time-formats.h"
 #include "time-astronomy.h"
 
+#include <infiltratr/arithmetic.h>
 #include <infiltratr/core.h>
 #include <math.h>
 #include <string.h>
@@ -70,12 +71,10 @@ static gint64
 floor_divide(gint64 value,
              gint64 divisor)
 {
-    gint64 quotient = value / divisor;
-    const gint64 remainder = value % divisor;
+    int64_t quotient = 0;
 
-    if (remainder < 0)
-        quotient--;
-
+    g_return_val_if_fail(
+        infiltratr_i64_floor_divmod(value, divisor, &quotient, NULL), 0);
     return quotient;
 }
 
@@ -83,8 +82,11 @@ static gint64
 positive_modulo(gint64 value,
                 gint64 modulus)
 {
-    const gint64 remainder = value % modulus;
-    return remainder < 0 ? remainder + modulus : remainder;
+    int64_t remainder = 0;
+
+    g_return_val_if_fail(
+        infiltratr_i64_floor_divmod(value, modulus, NULL, &remainder), 0);
+    return remainder;
 }
 
 static gint64
@@ -521,7 +523,6 @@ delay_julian_provider(gint64 unix_microseconds,
         show_seconds ? 100000 : 1000);
 }
 
-
 static gchar *
 format_mean_solar_provider(gint64 unix_microseconds,
                            gint utc_offset_seconds,
@@ -913,11 +914,11 @@ G_STATIC_ASSERT(G_N_ELEMENTS(time_providers) ==
 
 /*
  * Latitude-dependent historical modes keep the published C/GI ABI unchanged.
- * The Cinnamon adapter appends "@<latitude>" to the internal mode token.  The
+ * The Cinnamon adapter appends "@<latitude>" to the internal mode token. The
  * parser packs that latitude into otherwise-unused high enum bits, allowing
  * the existing CalendarPlusClockConfig layout and SystemClock.start() method
  * to carry location through the neutral engine without enlarging a published
- * structure or adding a second GI method.  Ordinary callers continue to use
+ * structure or adding a second GI method. Ordinary callers continue to use
  * the documented stable mode IDs and receive equatorial seasonal time.
  */
 #define LOCATION_MODE_TAG ((guint)0x40000000U)

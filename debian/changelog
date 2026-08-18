@@ -1,3 +1,14 @@
+calendar-plus (3.9.8) trixie; urgency=medium
+
+  * Move negative-safe Euclidean division and remainder into Infiltratr Common
+    1.6.0 and reuse it across date and alternative-clock arithmetic.
+  * Replace Calendar Plus's private event-timing overflow helper with Common's
+    saturating signed subtraction.
+  * Reduce Calendar Plus's bundled Common build footprint to core and arithmetic
+    while preserving the complete pinned shared source for release builds.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 18 Aug 2026 21:12:00 +1000
+
 calendar-plus (3.9.7) trixie; urgency=medium
 
   * Standardise the About dialog on the Linux Defragger GTK layout.

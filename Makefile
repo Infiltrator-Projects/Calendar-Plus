@@ -9,15 +9,14 @@ G_IR_COMPILER ?= g-ir-compiler
 PREFIX ?= /usr
 DESTDIR ?=
 
-VERSION := 3.9.7
+VERSION := 3.9.8
 UUID := calendar-plus@the-infiltratr
 BUILD_DIR := build
 DIST_DIR := dist
 INFILTRATR_COMMON_DIR := shared/infiltratr-common
 INFILTRATR_COMMON_URL := https://github.com/The-First-Infiltrator/Infiltrator-Libraries.git
-INFILTRATR_COMMON_TAG := v1.5.0
-INFILTRATR_COMMON_COMMIT := a0e75ffbe4e038c74c8f1e3d589f2dae87b2b7bb
-INFILTRATR_COMMON_VERSION := 1.5.0
+INFILTRATR_COMMON_COMMIT := 37c09a0fe497d1662f00a346197c6157b4a035e9
+INFILTRATR_COMMON_VERSION := 1.6.0
 LIB_BASENAME := calendar-plus
 LIB_SONAME := lib$(LIB_BASENAME).so.0
 LIB_REALNAME := lib$(LIB_BASENAME).so.0.0.0
@@ -79,14 +78,14 @@ PRIVATE_HEADERS := \
 	src/calendar-system-private.h \
 	src/event-store-private.h
 HEADERS := $(sort $(PUBLIC_HEADERS) $(CORE_HEADERS) $(PRIVATE_HEADERS))
-# Calendar Plus consumes the POSIX-free Common core and formatting layer.
+# Calendar Plus consumes only the dependency-free Common core/arithmetic layer.
 INFILTRATR_COMMON_SOURCES := \
 	$(INFILTRATR_COMMON_DIR)/src/core.c \
-	$(INFILTRATR_COMMON_DIR)/src/format.c
+	$(INFILTRATR_COMMON_DIR)/src/arithmetic.c
 INFILTRATR_COMMON_HEADERS := \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/compiler.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/core.h \
-	$(INFILTRATR_COMMON_DIR)/include/infiltratr/format.h
+	$(INFILTRATR_COMMON_DIR)/include/infiltratr/arithmetic.h
 INFILTRATR_COMMON_OBJECTS := \
 	$(patsubst $(INFILTRATR_COMMON_DIR)/src/%.c,$(BUILD_DIR)/infiltratr-%.o,$(INFILTRATR_COMMON_SOURCES))
 INFILTRATR_COMMON_ARCHIVE := $(BUILD_DIR)/libinfiltratr-common.a
@@ -139,7 +138,7 @@ MATH_LIBS = -lm
 GIR_INCLUDE_PATH ?= $(shell $(PKG_CONFIG) --variable=libdir glib-2.0)/gir-1.0
 GIR_SHARE_INCLUDE_PATH ?= $(PREFIX)/share/gir-1.0
 
-SOURCE_DATE_EPOCH ?= 1786684560
+SOURCE_DATE_EPOCH ?= 1787051520
 COVERAGE_MIN_LINES ?= 65
 DIST_FILES := \
 	.github \
@@ -184,9 +183,11 @@ common-check:
 		if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
 			git submodule update --init --depth 1 -- "$(INFILTRATR_COMMON_DIR)"; \
 		else \
-			mkdir -p "$(dir $(INFILTRATR_COMMON_DIR))"; \
-			git clone --depth 1 --branch "$(INFILTRATR_COMMON_TAG)" \
-				"$(INFILTRATR_COMMON_URL)" "$(INFILTRATR_COMMON_DIR)"; \
+			mkdir -p "$(INFILTRATR_COMMON_DIR)"; \
+			git -C "$(INFILTRATR_COMMON_DIR)" init -q; \
+			git -C "$(INFILTRATR_COMMON_DIR)" remote add origin "$(INFILTRATR_COMMON_URL)"; \
+			git -C "$(INFILTRATR_COMMON_DIR)" fetch -q --depth 1 origin "$(INFILTRATR_COMMON_COMMIT)"; \
+			git -C "$(INFILTRATR_COMMON_DIR)" checkout -q --detach FETCH_HEAD; \
 		fi; \
 	fi
 	@test -f "$(INFILTRATR_COMMON_DIR)/VERSION" || { \
@@ -353,7 +354,7 @@ $(BUILD_DIR)/test-portable-core: \
 		$(ICU_BRIDGE_LIBS) $(MATH_LIBS)
 
 $(BUILD_DIR)/test-infiltratr-common: \
-		$(INFILTRATR_COMMON_DIR)/tests/portable_smoke.c \
+		$(INFILTRATR_COMMON_DIR)/tests/arithmetic_smoke.c \
 		$(INFILTRATR_COMMON_ARCHIVE)
 	$(CC) $(CPPFLAGS) $(CFLAGS) \
 		-frandom-seed=$(REPRO_SEED_PREFIX)-infiltratr-common-test $< \
@@ -383,7 +384,6 @@ validate-js: validate-settings-generated
 	@for source in "$(UUID)"/*.js; do node --check "$$source"; done
 	@! rg -n 'const UUID = "calendar@cinnamon\.org"' "$(UUID)" || { \
 		echo "Stock applet UUID is configured as the runtime identity." >&2; exit 1; }
-
 
 validate-exports: $(BUILD_DIR)/$(LIB_REALNAME)
 	@command -v nm >/dev/null || { \
@@ -427,7 +427,6 @@ validate-sources:
 
 path-space-smoke:
 	tools/path-space-build.sh
-
 
 validate-package-inputs:
 	python3 tools/validate-package-inputs.py

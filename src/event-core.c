@@ -4,14 +4,15 @@
 /*
  * Event normalisation, interval indexing, ordering and snapshots.
  *
- * Inputs and results are ordinary C records.  Transport-specific tuple
- * parsing and presentation-specific marshalling belong to adapters.  Long
- * events remain one record: day membership is an interval query rather than
- * a per-day expansion, so storage is independent of event duration.
+ * Inputs and results are ordinary C records. Transport-specific tuple parsing
+ * and presentation-specific marshalling belong to adapters. Long events remain
+ * one record: day membership is an interval query rather than a per-day
+ * expansion, so storage is independent of event duration.
  */
 
 #include "event-core.h"
 
+#include <infiltratr/arithmetic.h>
 #include <string.h>
 
 typedef struct
@@ -81,11 +82,7 @@ static gint64
 saturating_difference(gint64 left,
                       gint64 right)
 {
-    if (right > 0 && left < G_MININT64 + right)
-        return G_MININT64;
-    if (right < 0 && left > G_MAXINT64 + right)
-        return G_MAXINT64;
-    return left - right;
+    return infiltratr_i64_subtract_saturating(left, right);
 }
 
 guint

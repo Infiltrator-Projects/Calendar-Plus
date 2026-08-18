@@ -46,11 +46,12 @@ def main() -> None:
     assert "shared/infiltratr-common" in makefile
     assert (
         "INFILTRATR_COMMON_COMMIT := "
-        "a0e75ffbe4e038c74c8f1e3d589f2dae87b2b7bb"
+        "37c09a0fe497d1662f00a346197c6157b4a035e9"
     ) in makefile
+    assert "INFILTRATR_COMMON_VERSION := 1.6.0" in makefile
     assert "normal `make` automatically retrieves" in read("README.md")
     assert "common-bootstrap: common-check" in makefile
-    assert "git clone --depth 1 --branch" in makefile
+    assert "git -C \"$(INFILTRATR_COMMON_DIR)\" fetch -q --depth 1 origin" in makefile
     assert "The-First-Infiltrator/Infiltrator-Libraries.git" in gitmodules
     assert "validate-translations" in makefile
     assert "CALENDAR_PLUS_BUILD_MODE ?= generic" in rules
@@ -62,6 +63,13 @@ def main() -> None:
     assert "validate-architecture" in rules
     assert "validate-abi" in rules
     assert "validate-runtime-deps" in rules
+
+    common_sources = makefile.split("INFILTRATR_COMMON_SOURCES :=", 1)[1].split(
+        "INFILTRATR_COMMON_HEADERS :=", 1
+    )[0]
+    assert "$(INFILTRATR_COMMON_DIR)/src/core.c" in common_sources
+    assert "$(INFILTRATR_COMMON_DIR)/src/arithmetic.c" in common_sources
+    assert "$(INFILTRATR_COMMON_DIR)/src/format.c" not in common_sources
 
     assert 'NATIVE_VERSION="${VERSION}+native${NATIVE_REVISION}"' in installer
     assert "CALENDAR_PLUS_BUILD_MODE=native" in installer
@@ -109,8 +117,6 @@ def main() -> None:
         "calendar-plus@the-infiltratr/panelClock.js"
     )
 
-    # Built-in calendars and clocks use versioned provider operation tables.
-    # Core dispatch must not grow a second mode-switch architecture.
     registry = read("src/calendar-registry.c")
     custom = read("src/calendar-custom.c")
     calendar_core = read("src/calendar-core.c")
@@ -145,23 +151,28 @@ def main() -> None:
     assert "libcalendar-base.so.0" in read("tools/validate-release-artifacts.sh")
     assert "libcpicu.so.0" in read("tools/validate-release-artifacts.sh")
     assert "strtod(text" not in read("shared/infiltratr-common/src/core.c")
-    assert "independent of LC_NUMERIC" in read(
+    assert "independently of LC_NUMERIC" in read(
         "shared/infiltratr-common/include/infiltratr/core.h"
     )
     assert "--fail-under-line $(COVERAGE_MIN_LINES)" in makefile
     assert "clang-analyzer-*" in makefile
     assert (ROOT / "tests/abi-baseline.txt").is_file()
     shared = ROOT / "shared/infiltratr-common"
-    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.5.0"
+    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.6.0"
     assert (shared / "LICENSE").is_file()
     assert (shared / "include/infiltratr/core.h").is_file()
+    assert (shared / "include/infiltratr/arithmetic.h").is_file()
     assert (shared / "include/infiltratr/format.h").is_file()
     assert (shared / "include/infiltratr/posix.h").is_file()
     assert (shared / "src/core.c").is_file()
+    assert (shared / "src/arithmetic.c").is_file()
     assert (shared / "src/format.c").is_file()
     assert (shared / "src/posix.c").is_file()
     assert "InfiltratrProjectInfo" in read(
         "shared/infiltratr-common/include/infiltratr/core.h"
+    )
+    assert "infiltratr_i64_floor_divmod" in read(
+        "shared/infiltratr-common/include/infiltratr/arithmetic.h"
     )
     assert "calendar_plus_project_info" in read("src/project-info.c")
 
@@ -169,8 +180,6 @@ def main() -> None:
     assert "cinnamon (>= 6.4)" in control
     assert "libicu76 | libicu74 | libicu78" in control
     assert "libgtk-3-0," not in control
-    # ICU must be a runtime-selected provider, not a build-host SONAME baked
-    # into libcalendar-plus. The headers remain a build dependency.
     assert "$(PKG_CONFIG) --libs gobject-2.0)" in makefile
     assert "$(PKG_CONFIG) --libs glib-2.0)" in makefile
     assert "-DU_DISABLE_RENAMING=1" in makefile
@@ -181,6 +190,7 @@ def main() -> None:
     version = metadata["version"]
     assert f"VERSION := {version}" in makefile
     assert metadata["author"] == "Shannon Smith"
+    assert metadata["website"] == "https://github.com/The-First-Infiltrator/Calendar-Plus"
     assert "const APP_VERSION" not in applet
     assert "metadata.version" in applet
 
@@ -197,7 +207,6 @@ def main() -> None:
         check=True,
     )
 
-    # Calendar Plus and its canonical shared dependency are GPL-3.0-or-later.
     assert ("GPL-" + "2.0-or-later") not in read("README.md")
     assert "Calendar Plus is GPL-3.0-or-later" in read("README.md")
     assert "License: GPL-3+" in read("debian/copyright")
