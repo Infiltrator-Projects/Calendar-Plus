@@ -21,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 APPLET = ROOT / "calendar-plus@the-infiltratr"
+PROJECT_URL = "https://github.com/The-First-Infiltrator/Calendar-Plus"
 
 TRANSIENT_PATTERNS = (
     re.compile(r"^g-ir-cpp-.*\.c$"),
@@ -106,7 +107,6 @@ def validate_abi_manifest() -> None:
     ), "native ABI 1.2 must inherit the 1.1 symbol set"
 
 
-
 def validate_debian_source_hygiene() -> None:
     options_path = ROOT / "debian/source/options"
     assert options_path.is_file(), "missing debian/source/options"
@@ -163,6 +163,18 @@ def validate_version() -> None:
     )
     assert metadata.get("version") == version, (
         "Makefile and applet metadata versions differ"
+    )
+    assert metadata.get("website") == PROJECT_URL, (
+        "Cinnamon metadata does not use the canonical Calendar Plus URL"
+    )
+
+    project_info = (ROOT / "src/project-info.c").read_text(encoding="utf-8")
+    assert f'.website = "{PROJECT_URL}"' in project_info, (
+        "native project metadata does not use the canonical Calendar Plus URL"
+    )
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert f"git clone --recurse-submodules {PROJECT_URL}.git" in readme, (
+        "README clone instructions do not use the canonical Calendar Plus URL"
     )
 
     applet_source = (APPLET / "applet.js").read_text(encoding="utf-8")
