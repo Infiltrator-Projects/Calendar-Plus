@@ -8,9 +8,11 @@
  * date-only axis. A JDN changes at civil midnight in this module; it is not
  * the fractional astronomical Julian Date used by the clock display.
  *
- * Gregorian/Julian conversion remains Calendar-owned. Negative-safe floor
- * division and Euclidean remainder are delegated to Infiltratr Common so all
- * portable consumers share one integer contract.
+ * The Gregorian and Julian conversions are the standard integer algorithms
+ * described by the US Naval Observatory and Dershowitz/Reingold. Euclidean
+ * division is essential for proleptic years before the common era because C
+ * division truncates toward zero; that generic negative-safe arithmetic is
+ * delegated to Infiltratr Common 1.6.0.
  */
 
 #include "julian-day.h"
