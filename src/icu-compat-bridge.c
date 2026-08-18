@@ -96,9 +96,10 @@ module_symbol(IcuModule module,
 
     _Static_assert(sizeof result == sizeof symbol,
                    "function and object pointers must have equal size");
+    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
     memcpy((void *)&result,
            (const void *)&symbol,
-           sizeof result); // NOLINT(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
+           sizeof result);
     return result;
 }
 #else
@@ -131,9 +132,10 @@ store_function_pointer(void *destination,
     /* POSIX/Win32 dynamic loaders return an object pointer representation. */
     if (destination_size == sizeof symbol)
     {
+        // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
         memcpy(destination,
                (const void *)&symbol,
-               sizeof symbol); // NOLINT(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
+               sizeof symbol);
     }
 }
 
