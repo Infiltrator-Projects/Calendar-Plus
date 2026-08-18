@@ -5,32 +5,27 @@
  * Integer civil-date arithmetic.
  *
  * Calendar Plus uses an integral Julian Day Number (JDN) as the internal
- * date-only axis.  A JDN changes at civil midnight in this module; it is not
+ * date-only axis. A JDN changes at civil midnight in this module; it is not
  * the fractional astronomical Julian Date used by the clock display.
  *
- * The Gregorian and Julian conversions are the standard integer algorithms
- * described by the US Naval Observatory and Dershowitz/Reingold.  Euclidean
- * division is essential for proleptic years before the common era because C
- * division truncates toward zero.
+ * Gregorian/Julian conversion remains Calendar-owned. Negative-safe floor
+ * division and Euclidean remainder are delegated to Infiltratr Common so all
+ * portable consumers share one integer contract.
  */
 
-
 #include "julian-day.h"
+
+#include <infiltratr/arithmetic.h>
 
 gint64
 calendar_plus_floor_divide(gint64 value,
                            gint64 divisor)
 {
-    gint64 quotient;
-    gint64 remainder;
+    int64_t quotient = 0;
 
     g_return_val_if_fail(divisor > 0, 0);
-
-    quotient = value / divisor;
-    remainder = value % divisor;
-    if (remainder < 0)
-        quotient--;
-
+    g_return_val_if_fail(
+        infiltratr_i64_floor_divmod(value, divisor, &quotient, NULL), 0);
     return quotient;
 }
 
@@ -38,10 +33,12 @@ gint64
 calendar_plus_positive_modulo(gint64 value,
                               gint64 modulus)
 {
-    const gint64 remainder = modulus > 0 ? value % modulus : 0;
+    int64_t remainder = 0;
 
     g_return_val_if_fail(modulus > 0, 0);
-    return remainder < 0 ? remainder + modulus : remainder;
+    g_return_val_if_fail(
+        infiltratr_i64_floor_divmod(value, modulus, NULL, &remainder), 0);
+    return remainder;
 }
 
 gboolean
