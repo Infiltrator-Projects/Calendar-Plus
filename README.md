@@ -120,7 +120,8 @@ reference anchors cover every registered provider. Additional gates are
 `make sanitize`, `make coverage`, `make static-analysis`,
 `make reproducible-build` and `make release-check`; the release gate also runs
 Lintian against the generic Debian package.
-The last command builds and validates the three public files in `dist/`.
+The last command builds and validates the two custom release files in `dist/`;
+GitHub supplies the tagged source archives automatically.
 
 On an installed Cinnamon session, `tools/cinnamon-smoke.sh` checks installed
 runtime hashes, metadata, About helper, native library/typelib compatibility
