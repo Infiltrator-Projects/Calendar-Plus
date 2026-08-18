@@ -5,8 +5,8 @@
  * Native clock-provider registry, formatting and tick scheduling.
  *
  * Each mode is one provider containing metadata plus paired format/delay
- * callbacks.  Adding a time system therefore extends one table instead of two
- * central switches.  The provider boundary also guarantees that the formula
+ * callbacks. Adding a time system therefore extends one table instead of two
+ * central switches. The provider boundary also guarantees that the formula
  * used to display a mode and the formula used to schedule its next update stay
  * together as one implementation unit.
  *
@@ -18,6 +18,7 @@
 #include "time-formats.h"
 #include "time-astronomy.h"
 
+#include <infiltratr/arithmetic.h>
 #include <infiltratr/core.h>
 #include <math.h>
 #include <string.h>
@@ -70,12 +71,10 @@ static gint64
 floor_divide(gint64 value,
              gint64 divisor)
 {
-    gint64 quotient = value / divisor;
-    const gint64 remainder = value % divisor;
+    int64_t quotient = 0;
 
-    if (remainder < 0)
-        quotient--;
-
+    g_return_val_if_fail(
+        infiltratr_i64_floor_divmod(value, divisor, &quotient, NULL), 0);
     return quotient;
 }
 
@@ -83,8 +82,11 @@ static gint64
 positive_modulo(gint64 value,
                 gint64 modulus)
 {
-    const gint64 remainder = value % modulus;
-    return remainder < 0 ? remainder + modulus : remainder;
+    int64_t remainder = 0;
+
+    g_return_val_if_fail(
+        infiltratr_i64_floor_divmod(value, modulus, NULL, &remainder), 0);
+    return remainder;
 }
 
 static gint64
@@ -521,7 +523,6 @@ delay_julian_provider(gint64 unix_microseconds,
         show_seconds ? 100000 : 1000);
 }
 
-
 static gchar *
 format_mean_solar_provider(gint64 unix_microseconds,
                            gint utc_offset_seconds,
@@ -631,7 +632,6 @@ format_chinese_provider(gint64 unix_microseconds,
     if (!vertical)
         return g_strdup(chinese_branches[branch]);
 
-    /* Keep narrow panels readable without inventing a finer historical unit. */
     {
         g_auto(GStrv) fields = g_strsplit(chinese_branches[branch], " ", 3);
         return g_strdup_printf("%s\n%s\n%s", fields[0], fields[1], fields[2]);
@@ -662,12 +662,6 @@ typedef struct
     long double seconds_to_next;
 } SeasonalPeriod;
 
-/*
- * Split apparent-solar daytime and nighttime independently. This is the common
- * mathematical primitive behind Roman unequal hours and Edo Japanese toki;
- * each provider supplies its historically appropriate boundary altitude and
- * number of subdivisions.
- */
 static gboolean
 seasonal_period_at(gint64 unix_microseconds,
                    gdouble latitude,
@@ -805,7 +799,6 @@ static const JapaneseToki japanese_night_toki[] = {
     { "寅", 7, "Tiger" }
 };
 
-/* Kansei-calendar dawn/dusk: solar centre 7°21′40″ below the horizon. */
 #define JAPANESE_DAWN_DEPRESSION (7.0 + 21.0 / 60.0 + 40.0 / 3600.0)
 
 static gchar *
@@ -873,12 +866,6 @@ delay_japanese_temporal_provider(gint64 unix_microseconds,
         latitude_, format_##token_##_provider, delay_##token_##_provider \
     }
 
-/*
- * Stable time-provider registry. Existing enum values remain fixed because the
- * enum is part of the public C API; new modes are therefore appended. Provider
- * metadata remains the single source for settings generation and capability
- * discovery.
- */
 static const TimeProvider time_providers[] = {
     TIME_PROVIDER(DECIMAL, decimal, "decimal",
                   "Decimal time (10-hour day)", TRUE, FALSE, FALSE),
@@ -911,15 +898,6 @@ static const TimeProvider time_providers[] = {
 G_STATIC_ASSERT(G_N_ELEMENTS(time_providers) ==
                 CALENDAR_PLUS_TIME_MODE_JAPANESE_TEMPORAL + 1);
 
-/*
- * Latitude-dependent historical modes keep the published C/GI ABI unchanged.
- * The Cinnamon adapter appends "@<latitude>" to the internal mode token.  The
- * parser packs that latitude into otherwise-unused high enum bits, allowing
- * the existing CalendarPlusClockConfig layout and SystemClock.start() method
- * to carry location through the neutral engine without enlarging a published
- * structure or adding a second GI method.  Ordinary callers continue to use
- * the documented stable mode IDs and receive equatorial seasonal time.
- */
 #define LOCATION_MODE_TAG ((guint)0x40000000U)
 #define LOCATION_MODE_BASE_MASK ((guint)0x000000ffU)
 #define LOCATION_LATITUDE_SCALE 10000.0
@@ -936,10 +914,6 @@ encode_location_mode(CalendarPlusTimeMode mode,
     const guint packed = LOCATION_MODE_TAG |
         (latitude_code << 8) | ((guint)mode & LOCATION_MODE_BASE_MASK);
 
-    /*
-     * The high bits are an internal transport encoding, not a new published
-     * enum member. decode_location_mode() removes them before provider lookup.
-     */
     // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
     return (CalendarPlusTimeMode)packed;
 }
