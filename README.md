@@ -14,10 +14,9 @@ decimal time, Internet Time, Unix time, hexadecimal and binary time, local
 sidereal time, apparent and mean solar time, Julian and Modified Julian Date,
 traditional Chinese double-hours, Roman temporal time and Edo Japanese
 seasonal time. Primary and optional secondary dates include Gregorian, Julian,
-ISO week, Hebrew, three Islamic
-variants, Persian, Chinese, Indian National, Coptic, Ethiopian, Buddhist,
-Japanese, Minguo, French Republican, Roman, Mayan Long Count, Badíʿ,
-International Fixed, World and Positivist calendars.
+ISO week, Hebrew, three Islamic variants, Persian, Chinese, Indian National,
+Coptic, Ethiopian, Buddhist, Japanese, Minguo, French Republican, Roman, Mayan
+Long Count, Badíʿ, International Fixed, World and Positivist calendars.
 
 ## Architecture
 
@@ -25,21 +24,21 @@ Calendar Plus has three deliberate layers:
 
 - `shared/infiltratr-common` is a Git submodule pinned to the GPL-3.0-or-later
   C11 foundation in the [Infiltrator Libraries](https://github.com/The-First-Infiltrator/Infiltrator-Libraries)
-  repository. It owns project identity, bounded strings, overflow-safe
-  arithmetic, binary quantity formatting and optional POSIX file/path/clock
-  adapters. Calendar Plus links it statically, so the source has one canonical
-  owner without creating a cross-package runtime dependency.
+  repository. Calendar Plus 3.9.8 compiles only Common's dependency-free
+  `core.c` and `arithmetic.c`: project identity, strict parsing, string helpers,
+  clamping, Euclidean signed division/remainder and saturating signed
+  subtraction. Calendar-specific code does not carry Common's formatting or
+  POSIX providers.
 - The C core owns calendar arithmetic, alternative-clock calculations,
   boundary scheduling, the 42-cell grid and event interval semantics. Its
   records and callback interfaces do not depend on GObject, GVariant, GJS or a
-  GUI main loop. GLib base facilities remain a portable dependency. ICU is used through a
-small runtime-loaded C adapter so the generic package is not tied to one ICU
-SONAME; current release packaging accepts ICU 74 (Ubuntu 24.04/Mint 22), ICU 76
-(Debian 13) or ICU 78.
+  GUI main loop. GLib base facilities remain a portable dependency. ICU is
+  used through a small runtime-loaded C adapter so the generic package is not
+  tied to one ICU SONAME; current release packaging accepts ICU 74
+  (Ubuntu 24.04/Mint 22), ICU 76 (Debian 13) or ICU 78.
 - Native adapters provide GObject Introspection, GVariant tuple conversion and
-  the GLib timer used by Cinnamon.
-- JavaScript owns Cinnamon actors, settings, translations, CalendarServer
-  transport and applet lifecycle.
+  the GLib timer used by Cinnamon. JavaScript owns Cinnamon actors, settings,
+  translations, CalendarServer transport and applet lifecycle.
 
 Calendar and clock implementations are registered through versioned internal
 provider tables. Provider metadata generates the matching settings choices, so
@@ -61,7 +60,7 @@ Each release is intended to be simple for end users:
 
 GitHub automatically provides `Source code (zip)` and `Source code (tar.gz)`
 for every tagged release. When one of those source archives is extracted, a
-normal `make` automatically retrieves the exact pinned Infiltratr Common source
+normal `make` automatically retrieves the exact pinned Infiltratr Common commit
 into `shared/infiltratr-common` if it is not already present. Calendar Plus and
 the shared library therefore remain separate source trees, but the person
 building Calendar Plus does not have to manage that relationship manually.
@@ -109,8 +108,8 @@ sudo make install
 ```
 
 Git clones and GitHub's automatic source archives use the same pinned shared
-source version. If the shared tree is absent, the normal build retrieves the
-exact required release automatically; no manual submodule step is required.
+source commit. If the shared tree is absent, the normal build retrieves that
+exact commit automatically; no manual submodule step is required.
 
 `make check` covers C reference/property tests, the adapter-free core,
 JavaScript lifecycle and syntax, GJS/typelib compatibility, exported symbols,
@@ -119,15 +118,15 @@ architecture boundaries and builds from paths containing spaces. Calendar
 reference anchors cover every registered provider. Additional gates are
 `make sanitize`, `make coverage`, `make static-analysis`,
 `make reproducible-build` and `make release-check`; the release gate also runs
-Lintian against the generic Debian package.
-The last command builds and validates the two custom release files in `dist/`;
-GitHub supplies the tagged source archives automatically.
+Lintian against the generic Debian package. The last command builds and
+validates the two custom release files in `dist/`; GitHub supplies the tagged
+source archives automatically.
 
 On an installed Cinnamon session, `tools/cinnamon-smoke.sh` checks installed
 runtime hashes, metadata, About helper, native library/typelib compatibility
-and every registered clock/calendar provider. Panel reload, popup use, every clock/calendar mode,
-suspend/resume, removal/re-add and reboot still require an interactive smoke
-test.
+and every registered clock/calendar provider. Panel reload, popup use, every
+clock/calendar mode, suspend/resume, removal/re-add and reboot still require an
+interactive smoke test.
 
 ## Maintenance rules
 
@@ -135,23 +134,24 @@ test.
   `clock-engine`, `event-core` and `event-source`.
 - Update the `shared/infiltratr-common` submodule only to a reviewed, tested
   Infiltratr Libraries release commit. Never edit a private application copy.
-- Infiltratr Common 1.5 owns strict scalar parsing, null-safe string predicates,
-  bounded numeric helpers and the shared memory, disk, network, percentage,
-  frequency, temperature and power formatters.
+- Infiltratr Common 1.6 owns the generic parsing/string/numeric primitives used
+  here, including negative-safe Euclidean division/remainder and saturating
+  signed subtraction. Calendar systems, astronomy, event semantics and timer
+  adapters remain Calendar Plus code.
 - Add built-in calendars and clocks through their provider tables, then run
   `make update-settings`.
-- After runtime JavaScript or JSON changes, run
-  `make update-runtime-hashes`. After translatable text changes, run
-  `make update-pot` and update the language catalogue.
+- After runtime JavaScript or JSON changes, run `make update-runtime-hashes`.
+  After translatable text changes, run `make update-pot` and update the language
+  catalogue.
 - Comments record ownership, units, invariants, algorithm choices, platform
   boundaries and non-obvious failure behaviour. They must not narrate syntax,
   preserve obsolete implementation history or promise behaviour the code does
   not enforce.
 - Existing entries in `tests/abi-baseline.txt` are historical ABI records and
   are not changed by routine releases; new API may add entries and version nodes.
-- A release updates `VERSION`, `metadata.json`, `SOURCE_DATE_EPOCH` and the top
-  Debian changelog entry, then publishes the `.deb` and `.run`; GitHub provides
-  the tagged source archives automatically.
+- A release updates the Makefile version, `metadata.json`, `SOURCE_DATE_EPOCH`
+  and the top Debian changelog entry, then publishes the `.deb` and `.run`;
+  GitHub provides the tagged source archives automatically.
 
 ## Model limits
 
