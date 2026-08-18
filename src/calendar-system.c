@@ -23,6 +23,8 @@ struct _CalendarPlusCalendarSystem
     CalendarPlusCalendarEngine *engine;
 };
 
+/* GLib's type-registration macro contains an intentional pointer probe. */
+// NOLINTNEXTLINE(performance-no-int-to-ptr)
 G_DEFINE_TYPE(CalendarPlusCalendarSystem,
               calendar_plus_calendar_system,
               G_TYPE_OBJECT)
@@ -33,15 +35,16 @@ calendar_plus_calendar_system_dispose(GObject *object)
     CalendarPlusCalendarSystem *self =
         CALENDAR_PLUS_CALENDAR_SYSTEM(object);
 
-    g_clear_pointer(&self->engine, calendar_plus_calendar_engine_free);
-    G_OBJECT_CLASS(calendar_plus_calendar_system_parent_class)->dispose(object);
+    calendar_plus_calendar_engine_free(self->engine);
+    self->engine = NULL;
+    G_OBJECT_CLASS(calendar_plus_calendar_system_parent_class)->dispose(object); // NOLINT(bugprone-casting-through-void)
 }
 
 static void
 calendar_plus_calendar_system_class_init(
     CalendarPlusCalendarSystemClass *klass)
 {
-    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    GObjectClass *object_class = G_OBJECT_CLASS(klass); // NOLINT(bugprone-casting-through-void)
 
     object_class->dispose = calendar_plus_calendar_system_dispose;
 }
@@ -63,7 +66,7 @@ calendar_plus_calendar_system_new(const gchar *calendar_id)
         return NULL;
 
     self = g_object_new(CALENDAR_PLUS_TYPE_CALENDAR_SYSTEM, NULL);
-    g_clear_pointer(&self->engine, calendar_plus_calendar_engine_free);
+    calendar_plus_calendar_engine_free(self->engine);
     self->engine = engine;
     return self;
 }

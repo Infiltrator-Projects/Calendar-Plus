@@ -76,7 +76,7 @@ calendar_plus_mayan_fields_to_jdn(
 
     return MAYAN_EPOCH_JDN +
            fields->year * MAYAN_KIN_PER_TUN +
-           fields->month * MAYAN_KIN_PER_UINAL +
+           (gint64)fields->month * MAYAN_KIN_PER_UINAL +
            fields->day;
 }
 
@@ -117,7 +117,12 @@ calendar_plus_roman_number(gint64 value)
         }
     }
 
-    return g_string_free(g_steal_pointer(&result), FALSE);
+    {
+        GString *owned_result = result;
+
+        result = NULL;
+        return g_string_free(owned_result, FALSE);
+    }
 }
 
 static gint

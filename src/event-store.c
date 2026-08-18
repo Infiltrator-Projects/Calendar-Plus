@@ -18,6 +18,8 @@ struct _CalendarPlusEventStore
     CalendarPlusEventIndex *index;
 };
 
+/* GLib's type-registration macro contains an intentional pointer probe. */
+// NOLINTNEXTLINE(performance-no-int-to-ptr)
 G_DEFINE_TYPE(CalendarPlusEventStore,
               calendar_plus_event_store,
               G_TYPE_OBJECT)
@@ -27,14 +29,15 @@ calendar_plus_event_store_dispose(GObject *object)
 {
     CalendarPlusEventStore *self = CALENDAR_PLUS_EVENT_STORE(object);
 
-    g_clear_pointer(&self->index, calendar_plus_event_index_free);
-    G_OBJECT_CLASS(calendar_plus_event_store_parent_class)->dispose(object);
+    calendar_plus_event_index_free(self->index);
+    self->index = NULL;
+    G_OBJECT_CLASS(calendar_plus_event_store_parent_class)->dispose(object); // NOLINT(bugprone-casting-through-void)
 }
 
 static void
 calendar_plus_event_store_class_init(CalendarPlusEventStoreClass *klass)
 {
-    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    GObjectClass *object_class = G_OBJECT_CLASS(klass); // NOLINT(bugprone-casting-through-void)
 
     object_class->dispose = calendar_plus_event_store_dispose;
 }

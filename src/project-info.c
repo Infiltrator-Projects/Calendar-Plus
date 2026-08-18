@@ -30,7 +30,7 @@ calendar_plus_project_info(void)
         .source_id = CALENDAR_PLUS_SOURCE_ID,
         .build_profile = CALENDAR_PLUS_BUILD_PROFILE,
         .author = "Shannon Smith",
-        .website = "https://github.com/The-Infiltratr",
+        .website = "https://github.com/The-First-Infiltrator/Calendar-Plus",
         .license_id = "GPL-3.0-or-later",
         .comments = N_("A native C-backed Cinnamon clock and calendar authored "
                        "by Shannon Smith, with multiple time and calendar "

@@ -241,7 +241,8 @@ calendar_plus_event_index_free(CalendarPlusEventIndex *index)
     if (index == NULL)
         return;
 
-    g_clear_pointer(&index->events_by_id, g_hash_table_destroy);
+    g_hash_table_destroy(index->events_by_id);
+    index->events_by_id = NULL;
     g_free(index);
 }
 

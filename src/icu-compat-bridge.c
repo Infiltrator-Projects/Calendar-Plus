@@ -96,7 +96,10 @@ module_symbol(IcuModule module,
 
     _Static_assert(sizeof result == sizeof symbol,
                    "function and object pointers must have equal size");
-    memcpy(&result, &symbol, sizeof result);
+    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
+    memcpy((void *)&result,
+           (const void *)&symbol,
+           sizeof result);
     return result;
 }
 #else
@@ -128,7 +131,12 @@ store_function_pointer(void *destination,
 {
     /* POSIX/Win32 dynamic loaders return an object pointer representation. */
     if (destination_size == sizeof symbol)
-        memcpy(destination, &symbol, sizeof symbol);
+    {
+        // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
+        memcpy(destination,
+               (const void *)&symbol,
+               sizeof symbol);
+    }
 }
 
 static int
@@ -141,6 +149,7 @@ load_symbol(IcuModule module,
     char versioned_name[96];
     void *symbol;
 
+    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
     (void)snprintf(versioned_name,
                    sizeof versioned_name,
                    "%s_%s",
@@ -161,7 +170,7 @@ close_bridge_modules(IcuBridgeApi *api)
 {
     module_close(api->i18n);
     module_close(api->uc);
-    memset(api, 0, sizeof *api);
+    *api = (IcuBridgeApi){ 0 };
 }
 
 static int
@@ -172,10 +181,14 @@ try_icu_major(const char *major,
     char i18n_name[64];
 
 #ifdef _WIN32
+    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
     (void)snprintf(uc_name, sizeof uc_name, "icuuc%s.dll", major);
+    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
     (void)snprintf(i18n_name, sizeof i18n_name, "icuin%s.dll", major);
 #else
+    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
     (void)snprintf(uc_name, sizeof uc_name, "libicuuc.so.%s", major);
+    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
     (void)snprintf(i18n_name, sizeof i18n_name, "libicui18n.so.%s", major);
 #endif
 
@@ -190,13 +203,13 @@ try_icu_major(const char *major,
 #define LOAD_UC(member_, symbol_) \
     do { \
         if (!load_symbol(api->uc, symbol_, major, \
-                         &api->member_, sizeof api->member_)) \
+                         (void *)&api->member_, sizeof api->member_)) \
             goto missing_symbol; \
     } while (0)
 #define LOAD_I18N(member_, symbol_) \
     do { \
         if (!load_symbol(api->i18n, symbol_, major, \
-                         &api->member_, sizeof api->member_)) \
+                         (void *)&api->member_, sizeof api->member_)) \
             goto missing_symbol; \
     } while (0)
 

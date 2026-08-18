@@ -17,8 +17,6 @@
 #include "calendar-registry.h"
 #include "julian-day.h"
 
-#include <string.h>
-
 struct _CalendarPlusCalendarEngine
 {
     const CalendarPlusCalendarProvider *provider;
@@ -259,7 +257,7 @@ calendar_plus_calendar_grid_clear(CalendarPlusCalendarGrid *grid)
 
     for (index = 0; index < CALENDAR_PLUS_CALENDAR_GRID_CELLS; index++)
         g_clear_pointer(&grid->cells[index].day_label, g_free);
-    memset(grid, 0, sizeof(*grid));
+    *grid = (CalendarPlusCalendarGrid){ 0 };
 }
 
 gboolean
@@ -280,7 +278,7 @@ calendar_plus_calendar_engine_build_grid(
 
     if (grid == NULL)
         return FALSE;
-    memset(grid, 0, sizeof(*grid));
+    *grid = (CalendarPlusCalendarGrid){ 0 };
 
     if (engine == NULL || engine->provider == NULL ||
         week_start < 0 || week_start >= CALENDAR_PLUS_DAYS_PER_WEEK ||
