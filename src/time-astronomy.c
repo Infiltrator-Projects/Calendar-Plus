@@ -13,6 +13,7 @@
 
 #include "time-astronomy.h"
 
+#include <infiltratr/arithmetic.h>
 #include <infiltratr/core.h>
 #include <math.h>
 
@@ -31,12 +32,10 @@ static gint64
 floor_divide(gint64 value,
              gint64 divisor)
 {
-    gint64 quotient = value / divisor;
-    const gint64 remainder = value % divisor;
+    int64_t quotient = 0;
 
-    if (remainder < 0)
-        quotient--;
-
+    g_return_val_if_fail(
+        infiltratr_i64_floor_divmod(value, divisor, &quotient, NULL), 0);
     return quotient;
 }
 
@@ -44,8 +43,11 @@ static gint64
 positive_modulo(gint64 value,
                 gint64 modulus)
 {
-    const gint64 remainder = value % modulus;
-    return remainder < 0 ? remainder + modulus : remainder;
+    int64_t remainder = 0;
+
+    g_return_val_if_fail(
+        infiltratr_i64_floor_divmod(value, modulus, NULL, &remainder), 0);
+    return remainder;
 }
 
 static gdouble
