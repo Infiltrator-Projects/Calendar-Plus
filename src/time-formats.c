@@ -936,6 +936,11 @@ encode_location_mode(CalendarPlusTimeMode mode,
     const guint packed = LOCATION_MODE_TAG |
         (latitude_code << 8) | ((guint)mode & LOCATION_MODE_BASE_MASK);
 
+    /*
+     * The high bits are an internal transport encoding, not a new published
+     * enum member. decode_location_mode() removes them before provider lookup.
+     */
+    // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
     return (CalendarPlusTimeMode)packed;
 }
 
