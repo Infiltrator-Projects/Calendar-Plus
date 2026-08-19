@@ -127,16 +127,12 @@ jobs:
           if text.count(old) != 1:
               raise SystemExit('icu bridge: open block not found exactly once')
           text = text.replace(old, new, 1)
-          old = 'if (!load_symbol(api->uc, symbol_, major, \\\'
-          new = 'if (!load_symbol(&api->uc, symbol_, major, \\\'
-          if text.count(old) != 1:
+          if text.count('load_symbol(api->uc') != 1:
               raise SystemExit('icu bridge: UC loader macro not found exactly once')
-          text = text.replace(old, new, 1)
-          old = 'if (!load_symbol(api->i18n, symbol_, major, \\\'
-          new = 'if (!load_symbol(&api->i18n, symbol_, major, \\\'
-          if text.count(old) != 1:
+          text = text.replace('load_symbol(api->uc', 'load_symbol(&api->uc', 1)
+          if text.count('load_symbol(api->i18n') != 1:
               raise SystemExit('icu bridge: I18N loader macro not found exactly once')
-          text = text.replace(old, new, 1)
+          text = text.replace('load_symbol(api->i18n', 'load_symbol(&api->i18n', 1)
           bridge.write_text(text, encoding="utf-8")
 
           about = Path("src/about-dialog.c")
