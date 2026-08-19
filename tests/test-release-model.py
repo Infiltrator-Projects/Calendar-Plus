@@ -46,9 +46,9 @@ def main() -> None:
     assert "shared/infiltratr-common" in makefile
     assert (
         "INFILTRATR_COMMON_COMMIT := "
-        "37c09a0fe497d1662f00a346197c6157b4a035e9"
+        "318b1babc7343403ae5e222ea01235a0fc84d752"
     ) in makefile
-    assert "INFILTRATR_COMMON_VERSION := 1.6.0" in makefile
+    assert "INFILTRATR_COMMON_VERSION := 1.8.0" in makefile
     assert "normal `make` automatically retrieves" in read("README.md")
     assert "common-bootstrap: common-check" in makefile
     assert "git -C \"$(INFILTRATR_COMMON_DIR)\" fetch -q --depth 1 origin" in makefile
@@ -69,6 +69,8 @@ def main() -> None:
     )[0]
     assert "$(INFILTRATR_COMMON_DIR)/src/core.c" in common_sources
     assert "$(INFILTRATR_COMMON_DIR)/src/arithmetic.c" in common_sources
+    assert "$(INFILTRATR_COMMON_DIR)/src/timing.c" in common_sources
+    assert "$(INFILTRATR_COMMON_DIR)/src/dynlib.c" in common_sources
     assert "$(INFILTRATR_COMMON_DIR)/src/format.c" not in common_sources
 
     assert 'NATIVE_VERSION="${VERSION}+native${NATIVE_REVISION}"' in installer
@@ -158,14 +160,18 @@ def main() -> None:
     assert "clang-analyzer-*" in makefile
     assert (ROOT / "tests/abi-baseline.txt").is_file()
     shared = ROOT / "shared/infiltratr-common"
-    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.6.0"
+    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.8.0"
     assert (shared / "LICENSE").is_file()
     assert (shared / "include/infiltratr/core.h").is_file()
     assert (shared / "include/infiltratr/arithmetic.h").is_file()
+    assert (shared / "include/infiltratr/timing.h").is_file()
+    assert (shared / "include/infiltratr/dynlib.h").is_file()
     assert (shared / "include/infiltratr/format.h").is_file()
     assert (shared / "include/infiltratr/posix.h").is_file()
     assert (shared / "src/core.c").is_file()
     assert (shared / "src/arithmetic.c").is_file()
+    assert (shared / "src/timing.c").is_file()
+    assert (shared / "src/dynlib.c").is_file()
     assert (shared / "src/format.c").is_file()
     assert (shared / "src/posix.c").is_file()
     assert "InfiltratrProjectInfo" in read(
@@ -173,6 +179,12 @@ def main() -> None:
     )
     assert "infiltratr_i64_floor_divmod" in read(
         "shared/infiltratr-common/include/infiltratr/arithmetic.h"
+    )
+    assert "infiltratr_period_remaining" in read(
+        "shared/infiltratr-common/include/infiltratr/timing.h"
+    )
+    assert "infiltratr_dynlib_symbol" in read(
+        "shared/infiltratr-common/include/infiltratr/dynlib.h"
     )
     assert "calendar_plus_project_info" in read("src/project-info.c")
 
@@ -184,7 +196,8 @@ def main() -> None:
     assert "$(PKG_CONFIG) --libs glib-2.0)" in makefile
     assert "-DU_DISABLE_RENAMING=1" in makefile
     assert "src/icu-compat-bridge.c" in makefile
-    assert "ICU_BRIDGE_LIBS = -ldl -pthread" in makefile
+    assert "ICU_BRIDGE_LIBS = $(DYNLIB_LIBS) -pthread" in makefile
+    assert "DYNLIB_LIBS = -ldl" in makefile
 
     metadata = json.loads(read("calendar-plus@the-infiltratr/metadata.json"))
     version = metadata["version"]
