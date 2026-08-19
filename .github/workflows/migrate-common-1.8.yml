@@ -7,6 +7,10 @@ on:
     branches: [feature/common-1.8-migration]
     paths:
       - .github/workflows/migrate-common-1.8.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/migrate-common-1.8.yml
 
 permissions:
   contents: write
@@ -90,44 +94,78 @@ jobs:
 
           bridge = Path("src/icu-compat-bridge.c")
           text = bridge.read_text(encoding="utf-8")
-          text = text.replace('#include <string.h>\n\n#include <unicode/ucal.h>',
-                              '#include <infiltratr/dynlib.h>\n\n#include <unicode/ucal.h>', 1)
-          text = text.replace('#ifdef _WIN32\n#include <windows.h>\ntypedef HMODULE IcuModule;\nstatic INIT_ONCE bridge_once = INIT_ONCE_STATIC_INIT;\n#else\n#include <dlfcn.h>\n#include <pthread.h>\ntypedef void *IcuModule;\nstatic pthread_once_t bridge_once = PTHREAD_ONCE_INIT;\n#endif',
-                              '#ifdef _WIN32\n#include <windows.h>\nstatic INIT_ONCE bridge_once = INIT_ONCE_STATIC_INIT;\n#else\n#include <pthread.h>\nstatic pthread_once_t bridge_once = PTHREAD_ONCE_INIT;\n#endif', 1)
-          text = text.replace('    IcuModule uc;\n    IcuModule i18n;',
-                              '    InfiltratrDynlib uc;\n    InfiltratrDynlib i18n;', 1)
+          old = '#include <string.h>\n\n#include <unicode/ucal.h>'
+          new = '#include <infiltratr/dynlib.h>\n\n#include <unicode/ucal.h>'
+          if text.count(old) != 1:
+              raise SystemExit('icu bridge: include block not found exactly once')
+          text = text.replace(old, new, 1)
+          old = '#ifdef _WIN32\n#include <windows.h>\ntypedef HMODULE IcuModule;\nstatic INIT_ONCE bridge_once = INIT_ONCE_STATIC_INIT;\n#else\n#include <dlfcn.h>\n#include <pthread.h>\ntypedef void *IcuModule;\nstatic pthread_once_t bridge_once = PTHREAD_ONCE_INIT;\n#endif'
+          new = '#ifdef _WIN32\n#include <windows.h>\nstatic INIT_ONCE bridge_once = INIT_ONCE_STATIC_INIT;\n#else\n#include <pthread.h>\nstatic pthread_once_t bridge_once = PTHREAD_ONCE_INIT;\n#endif'
+          if text.count(old) != 1:
+              raise SystemExit('icu bridge: platform block not found exactly once')
+          text = text.replace(old, new, 1)
+          old = '    IcuModule uc;\n    IcuModule i18n;'
+          new = '    InfiltratrDynlib uc;\n    InfiltratrDynlib i18n;'
+          if text.count(old) != 1:
+              raise SystemExit('icu bridge: module fields not found exactly once')
+          text = text.replace(old, new, 1)
           start = text.index('#ifdef _WIN32\nstatic IcuModule\nmodule_open')
           end = text.index('static int\nload_symbol', start)
           text = text[:start] + text[end:]
           old = '''static int\nload_symbol(IcuModule module,\n            const char *base_name,\n            const char *major,\n            void *destination,\n            size_t destination_size)\n{\n    char versioned_name[96];\n    void *symbol;\n\n    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)\n    (void)snprintf(versioned_name,\n                   sizeof versioned_name,\n                   "%s_%s",\n                   base_name,\n                   major);\n    symbol = module_symbol(module, versioned_name);\n    if (symbol == NULL)\n        symbol = module_symbol(module, base_name);\n    if (symbol == NULL)\n        return 0;\n\n    store_function_pointer(destination, destination_size, symbol);\n    return 1;\n}\n'''
           new = '''static int\nload_symbol(const InfiltratrDynlib *module,\n            const char *base_name,\n            const char *major,\n            void *destination,\n            size_t destination_size)\n{\n    char versioned_name[96];\n\n    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)\n    (void)snprintf(versioned_name,\n                   sizeof versioned_name,\n                   "%s_%s",\n                   base_name,\n                   major);\n    if (infiltratr_dynlib_symbol(module,\n                                 versioned_name,\n                                 destination,\n                                 destination_size))\n    {\n        return 1;\n    }\n    return infiltratr_dynlib_symbol(module,\n                                    base_name,\n                                    destination,\n                                    destination_size) ? 1 : 0;\n}\n'''
-          if old not in text:
-              raise SystemExit('icu bridge: load_symbol block not found')
+          if text.count(old) != 1:
+              raise SystemExit('icu bridge: load_symbol block not found exactly once')
           text = text.replace(old, new, 1)
-          text = text.replace('    module_close(api->i18n);\n    module_close(api->uc);',
-                              '    infiltratr_dynlib_close(&api->i18n);\n    infiltratr_dynlib_close(&api->uc);', 1)
-          text = text.replace('    api->uc = module_open(uc_name);\n    api->i18n = module_open(i18n_name);\n    if (api->uc == NULL || api->i18n == NULL)',
-                              '    if (!infiltratr_dynlib_open(&api->uc, uc_name) ||\n        !infiltratr_dynlib_open(&api->i18n, i18n_name))', 1)
-          text = text.replace('if (!load_symbol(api->uc, symbol_, major, \\',
-                              'if (!load_symbol(&api->uc, symbol_, major, \\', 1)
-          text = text.replace('if (!load_symbol(api->i18n, symbol_, major, \\',
-                              'if (!load_symbol(&api->i18n, symbol_, major, \\', 1)
+          old = '    module_close(api->i18n);\n    module_close(api->uc);'
+          new = '    infiltratr_dynlib_close(&api->i18n);\n    infiltratr_dynlib_close(&api->uc);'
+          if text.count(old) != 1:
+              raise SystemExit('icu bridge: close block not found exactly once')
+          text = text.replace(old, new, 1)
+          old = '    api->uc = module_open(uc_name);\n    api->i18n = module_open(i18n_name);\n    if (api->uc == NULL || api->i18n == NULL)'
+          new = '    if (!infiltratr_dynlib_open(&api->uc, uc_name) ||\n        !infiltratr_dynlib_open(&api->i18n, i18n_name))'
+          if text.count(old) != 1:
+              raise SystemExit('icu bridge: open block not found exactly once')
+          text = text.replace(old, new, 1)
+          old = 'if (!load_symbol(api->uc, symbol_, major, \\\'
+          new = 'if (!load_symbol(&api->uc, symbol_, major, \\\'
+          if text.count(old) != 1:
+              raise SystemExit('icu bridge: UC loader macro not found exactly once')
+          text = text.replace(old, new, 1)
+          old = 'if (!load_symbol(api->i18n, symbol_, major, \\\'
+          new = 'if (!load_symbol(&api->i18n, symbol_, major, \\\'
+          if text.count(old) != 1:
+              raise SystemExit('icu bridge: I18N loader macro not found exactly once')
+          text = text.replace(old, new, 1)
           bridge.write_text(text, encoding="utf-8")
 
           about = Path("src/about-dialog.c")
           text = about.read_text(encoding="utf-8")
-          text = text.replace('#include <gmodule.h>\n', '#include <infiltratr/dynlib.h>\n', 1)
-          text = text.replace('static GModule *gtk_module;',
-                              'static InfiltratrDynlib gtk_module = INFILTRATR_DYNLIB_INIT;', 1)
+          old = '#include <gmodule.h>\n'
+          new = '#include <infiltratr/dynlib.h>\n'
+          if text.count(old) != 1:
+              raise SystemExit('about dialog: gmodule include not found exactly once')
+          text = text.replace(old, new, 1)
+          old = 'static GModule *gtk_module;'
+          new = 'static InfiltratrDynlib gtk_module = INFILTRATR_DYNLIB_INIT;'
+          if text.count(old) != 1:
+              raise SystemExit('about dialog: module storage not found exactly once')
+          text = text.replace(old, new, 1)
           old = '''static gboolean\nload_gtk(void)\n{\n    gtk_module = g_module_open("libgtk-3.so.0", G_MODULE_BIND_LAZY |\n                                                G_MODULE_BIND_LOCAL);\n    if (gtk_module == NULL)\n        return FALSE;\n\n#define LOAD_GTK(member, symbol) \\\n    if (!g_module_symbol(gtk_module, symbol, (gpointer *)&gtk_api.member)) \\\n        return FALSE\n\n    LOAD_GTK(init_check, "gtk_init_check");\n    LOAD_GTK(about_dialog_new, "gtk_about_dialog_new");\n    LOAD_GTK(set_program_name, "gtk_about_dialog_set_program_name");\n    LOAD_GTK(set_version, "gtk_about_dialog_set_version");\n    LOAD_GTK(set_comments, "gtk_about_dialog_set_comments");\n    LOAD_GTK(set_website, "gtk_about_dialog_set_website");\n    LOAD_GTK(set_website_label, "gtk_about_dialog_set_website_label");\n    LOAD_GTK(set_copyright, "gtk_about_dialog_set_copyright");\n    LOAD_GTK(set_license, "gtk_about_dialog_set_license");\n    LOAD_GTK(set_wrap_license, "gtk_about_dialog_set_wrap_license");\n    LOAD_GTK(set_logo_icon_name, "gtk_about_dialog_set_logo_icon_name");\n    LOAD_GTK(set_authors, "gtk_about_dialog_set_authors");\n    LOAD_GTK(window_set_title, "gtk_window_set_title");\n    LOAD_GTK(dialog_run, "gtk_dialog_run");\n    LOAD_GTK(widget_show, "gtk_widget_show");\n    LOAD_GTK(widget_destroy, "gtk_widget_destroy");\n\n#undef LOAD_GTK\n    return TRUE;\n}\n'''
           new = '''static gboolean\nload_gtk(void)\n{\n    if (!infiltratr_dynlib_open(&gtk_module, "libgtk-3.so.0"))\n        return FALSE;\n\n#define LOAD_GTK(member, symbol) \\\n    do { \\\n        if (!infiltratr_dynlib_symbol(&gtk_module, symbol, \\\n                                      &gtk_api.member, \\\n                                      sizeof gtk_api.member)) { \\\n            infiltratr_dynlib_close(&gtk_module); \\\n            gtk_api = (Gtk3Api){ 0 }; \\\n            return FALSE; \\\n        } \\\n    } while (0)\n\n    LOAD_GTK(init_check, "gtk_init_check");\n    LOAD_GTK(about_dialog_new, "gtk_about_dialog_new");\n    LOAD_GTK(set_program_name, "gtk_about_dialog_set_program_name");\n    LOAD_GTK(set_version, "gtk_about_dialog_set_version");\n    LOAD_GTK(set_comments, "gtk_about_dialog_set_comments");\n    LOAD_GTK(set_website, "gtk_about_dialog_set_website");\n    LOAD_GTK(set_website_label, "gtk_about_dialog_set_website_label");\n    LOAD_GTK(set_copyright, "gtk_about_dialog_set_copyright");\n    LOAD_GTK(set_license, "gtk_about_dialog_set_license");\n    LOAD_GTK(set_wrap_license, "gtk_about_dialog_set_wrap_license");\n    LOAD_GTK(set_logo_icon_name, "gtk_about_dialog_set_logo_icon_name");\n    LOAD_GTK(set_authors, "gtk_about_dialog_set_authors");\n    LOAD_GTK(window_set_title, "gtk_window_set_title");\n    LOAD_GTK(dialog_run, "gtk_dialog_run");\n    LOAD_GTK(widget_show, "gtk_widget_show");\n    LOAD_GTK(widget_destroy, "gtk_widget_destroy");\n\n#undef LOAD_GTK\n    return TRUE;\n}\n'''
-          if old not in text:
-              raise SystemExit('about dialog: load_gtk block not found')
+          if text.count(old) != 1:
+              raise SystemExit('about dialog: load_gtk block not found exactly once')
           text = text.replace(old, new, 1)
-          text = text.replace('        fprintf(stderr, "%s: %s\\n", _("Unable to load GTK 3"),\n                g_module_error());',
-                              '        fprintf(stderr, "%s\\n", _("Unable to load GTK 3"));', 1)
-          text = text.replace('    g_module_close(gtk_module);',
-                              '    infiltratr_dynlib_close(&gtk_module);', 1)
+          old = '        fprintf(stderr, "%s: %s\\n", _("Unable to load GTK 3"),\n                g_module_error());'
+          new = '        fprintf(stderr, "%s\\n", _("Unable to load GTK 3"));'
+          if text.count(old) != 1:
+              raise SystemExit('about dialog: error output not found exactly once')
+          text = text.replace(old, new, 1)
+          old = '    g_module_close(gtk_module);'
+          new = '    infiltratr_dynlib_close(&gtk_module);'
+          if text.count(old) != 1:
+              raise SystemExit('about dialog: close call not found exactly once')
+          text = text.replace(old, new, 1)
           about.write_text(text, encoding="utf-8")
 
           replace_once(
