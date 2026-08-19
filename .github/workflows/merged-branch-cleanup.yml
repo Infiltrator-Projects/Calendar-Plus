@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: One-shot merged branch cleanup
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/merged-branch-cleanup.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.head_ref == 'maintenance/merged-branch-cleanup'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete only branches proven merged into main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branches=(
+            'fix/ci-project-url'
+            'fix/ci-project-url-final'
+            'fix/ci-project-url-pr'
+            'fix/ci-project-url-test'
+            'fix/repository-audit-3.9.8'
+          )
+
+          for branch in "${branches[@]}"; do
+            ahead="$(gh api "/repos/${GITHUB_REPOSITORY}/compare/main...${branch}" --jq '.ahead_by')"
+            if [ "$ahead" != '0' ]; then
+              echo "Refusing to delete ${branch}: ahead_by=${ahead}." >&2
+              exit 1
+            fi
+            gh api --method DELETE "/repos/${GITHUB_REPOSITORY}/git/refs/heads/${branch}"
+            echo "Deleted merged branch ${branch}."
+          done
+
+      - name: Remove this temporary maintenance branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --method DELETE "/repos/${GITHUB_REPOSITORY}/git/refs/heads/maintenance/merged-branch-cleanup"
