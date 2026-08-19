@@ -20,6 +20,7 @@
 
 #include <infiltratr/arithmetic.h>
 #include <infiltratr/core.h>
+#include <infiltratr/timing.h>
 #include <math.h>
 #include <string.h>
 
@@ -149,20 +150,20 @@ format_clock_fields(gint hour,
 }
 
 static guint
+delay_seconds_to_milliseconds(long double seconds)
+{
+    uint64_t milliseconds = 0;
+
+    if (!infiltratr_seconds_to_milliseconds_ceil(seconds, &milliseconds))
+        return 1;
+    return milliseconds > G_MAXUINT ? G_MAXUINT : (guint)milliseconds;
+}
+
+static guint
 delay_microseconds_to_milliseconds(long double microseconds)
 {
-    long double milliseconds;
-
-    if (!isfinite((double)microseconds) || microseconds <= 0.0L)
-        return 1;
-
-    milliseconds = ceill(microseconds / 1000.0L);
-    if (milliseconds < 1.0L)
-        return 1;
-    if (milliseconds > G_MAXUINT)
-        return G_MAXUINT;
-
-    return (guint)milliseconds;
+    return delay_seconds_to_milliseconds(
+        microseconds / (long double)G_USEC_PER_SEC);
 }
 
 /*
@@ -174,14 +175,14 @@ static guint
 delay_for_period(gint64 position_microseconds,
                  long double period_microseconds)
 {
-    long double phase =
-        fmodl((long double)position_microseconds, period_microseconds);
-    long double remaining;
+    long double remaining = 0.0L;
 
-    if (phase < 0.0L)
-        phase += period_microseconds;
-
-    remaining = period_microseconds - phase;
+    if (!infiltratr_period_remaining((long double)position_microseconds,
+                                     period_microseconds,
+                                     &remaining))
+    {
+        return 1;
+    }
     if (remaining < 0.5L)
         remaining = period_microseconds;
 
@@ -203,13 +204,15 @@ delay_for_clock_seconds(long double clock_seconds,
                         gboolean show_seconds)
 {
     const long double unit = show_seconds ? 1.0L : 60.0L;
-    long double phase = fmodl(clock_seconds, unit);
+    long double remaining = 0.0L;
 
-    if (phase < 0.0L)
-        phase += unit;
+    if (!isfinite(clock_rate) || clock_rate <= 0.0L ||
+        !infiltratr_period_remaining(clock_seconds, unit, &remaining))
+    {
+        return 1;
+    }
 
-    return delay_microseconds_to_milliseconds(
-        (unit - phase) / clock_rate * G_USEC_PER_SEC);
+    return delay_seconds_to_milliseconds(remaining / clock_rate);
 }
 
 static gchar *

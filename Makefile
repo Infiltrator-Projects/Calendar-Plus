@@ -15,8 +15,8 @@ BUILD_DIR := build
 DIST_DIR := dist
 INFILTRATR_COMMON_DIR := shared/infiltratr-common
 INFILTRATR_COMMON_URL := https://github.com/The-First-Infiltrator/Infiltrator-Libraries.git
-INFILTRATR_COMMON_COMMIT := 37c09a0fe497d1662f00a346197c6157b4a035e9
-INFILTRATR_COMMON_VERSION := 1.6.0
+INFILTRATR_COMMON_COMMIT := 318b1babc7343403ae5e222ea01235a0fc84d752
+INFILTRATR_COMMON_VERSION := 1.8.0
 LIB_BASENAME := calendar-plus
 LIB_SONAME := lib$(LIB_BASENAME).so.0
 LIB_REALNAME := lib$(LIB_BASENAME).so.0.0.0
@@ -78,14 +78,19 @@ PRIVATE_HEADERS := \
 	src/calendar-system-private.h \
 	src/event-store-private.h
 HEADERS := $(sort $(PUBLIC_HEADERS) $(CORE_HEADERS) $(PRIVATE_HEADERS))
-# Calendar Plus consumes only the dependency-free Common core/arithmetic layer.
+# Calendar Plus consumes Common's dependency-free core/arithmetic/timing
+# plus the thin POSIX/Win32 dynamic-library adapter.
 INFILTRATR_COMMON_SOURCES := \
 	$(INFILTRATR_COMMON_DIR)/src/core.c \
-	$(INFILTRATR_COMMON_DIR)/src/arithmetic.c
+	$(INFILTRATR_COMMON_DIR)/src/arithmetic.c \
+	$(INFILTRATR_COMMON_DIR)/src/timing.c \
+	$(INFILTRATR_COMMON_DIR)/src/dynlib.c
 INFILTRATR_COMMON_HEADERS := \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/compiler.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/core.h \
-	$(INFILTRATR_COMMON_DIR)/include/infiltratr/arithmetic.h
+	$(INFILTRATR_COMMON_DIR)/include/infiltratr/arithmetic.h \
+	$(INFILTRATR_COMMON_DIR)/include/infiltratr/timing.h \
+	$(INFILTRATR_COMMON_DIR)/include/infiltratr/dynlib.h
 INFILTRATR_COMMON_OBJECTS := \
 	$(patsubst $(INFILTRATR_COMMON_DIR)/src/%.c,$(BUILD_DIR)/infiltratr-%.o,$(INFILTRATR_COMMON_SOURCES))
 INFILTRATR_COMMON_ARCHIVE := $(BUILD_DIR)/libinfiltratr-common.a
@@ -131,9 +136,8 @@ GLIB_CFLAGS = $(shell $(PKG_CONFIG) --cflags gobject-2.0 icu-i18n)
 GLIB_LIBS = $(shell $(PKG_CONFIG) --libs gobject-2.0)
 CORE_CFLAGS = $(shell $(PKG_CONFIG) --cflags glib-2.0 icu-i18n)
 CORE_LIBS = $(shell $(PKG_CONFIG) --libs glib-2.0)
-GMODULE_CFLAGS = $(shell $(PKG_CONFIG) --cflags gmodule-2.0)
-GMODULE_LIBS = $(shell $(PKG_CONFIG) --libs gmodule-2.0)
-ICU_BRIDGE_LIBS = -ldl -pthread
+DYNLIB_LIBS = -ldl
+ICU_BRIDGE_LIBS = $(DYNLIB_LIBS) -pthread
 MATH_LIBS = -lm
 GIR_INCLUDE_PATH ?= $(shell $(PKG_CONFIG) --variable=libdir glib-2.0)/gir-1.0
 GIR_SHARE_INCLUDE_PATH ?= $(PREFIX)/share/gir-1.0
@@ -262,8 +266,8 @@ $(BUILD_DIR)/$(ABOUT_BINARY): src/about-dialog.c src/project-info.c \
 	@mkdir -p "$(BUILD_DIR)"
 	$(CC) $(CPPFLAGS) $(CFLAGS) \
 		-frandom-seed=$(REPRO_SEED_PREFIX)-about-dialog \
-		$(GLIB_CFLAGS) $(GMODULE_CFLAGS) src/about-dialog.c src/project-info.c \
-		$(INFILTRATR_COMMON_ARCHIVE) -o $@ $(LDFLAGS) $(GMODULE_LIBS) $(MATH_LIBS)
+		$(GLIB_CFLAGS) src/about-dialog.c src/project-info.c \
+		$(INFILTRATR_COMMON_ARCHIVE) -o $@ $(LDFLAGS) $(DYNLIB_LIBS) $(MATH_LIBS)
 	chmod 0755 $@
 
 translations:
