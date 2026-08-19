@@ -18,7 +18,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
+#include <infiltratr/dynlib.h>
 
 #include <unicode/ucal.h>
 #include <unicode/udat.h>
@@ -27,19 +27,16 @@
 
 #ifdef _WIN32
 #include <windows.h>
-typedef HMODULE IcuModule;
 static INIT_ONCE bridge_once = INIT_ONCE_STATIC_INIT;
 #else
-#include <dlfcn.h>
 #include <pthread.h>
-typedef void *IcuModule;
 static pthread_once_t bridge_once = PTHREAD_ONCE_INIT;
 #endif
 
 typedef struct
 {
-    IcuModule uc;
-    IcuModule i18n;
+    InfiltratrDynlib uc;
+    InfiltratrDynlib i18n;
     int available;
 
     const char *(*uloc_get_default)(void);
@@ -73,81 +70,14 @@ typedef struct
 
 static IcuBridgeApi bridge_api;
 
-#ifdef _WIN32
-static IcuModule
-module_open(const char *name)
-{
-    return LoadLibraryA(name);
-}
-
-static void
-module_close(IcuModule module)
-{
-    if (module != NULL)
-        (void)FreeLibrary(module);
-}
-
-static void *
-module_symbol(IcuModule module,
-              const char *name)
-{
-    FARPROC symbol = GetProcAddress(module, name);
-    void *result = NULL;
-
-    _Static_assert(sizeof result == sizeof symbol,
-                   "function and object pointers must have equal size");
-    // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
-    memcpy((void *)&result,
-           (const void *)&symbol,
-           sizeof result);
-    return result;
-}
-#else
-static IcuModule
-module_open(const char *name)
-{
-    return dlopen(name, RTLD_NOW | RTLD_LOCAL);
-}
-
-static void
-module_close(IcuModule module)
-{
-    if (module != NULL)
-        (void)dlclose(module);
-}
-
-static void *
-module_symbol(IcuModule module,
-              const char *name)
-{
-    return dlsym(module, name);
-}
-#endif
-
-static void
-store_function_pointer(void *destination,
-                       size_t destination_size,
-                       void *symbol)
-{
-    /* POSIX/Win32 dynamic loaders return an object pointer representation. */
-    if (destination_size == sizeof symbol)
-    {
-        // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
-        memcpy(destination,
-               (const void *)&symbol,
-               sizeof symbol);
-    }
-}
-
 static int
-load_symbol(IcuModule module,
+load_symbol(const InfiltratrDynlib *module,
             const char *base_name,
             const char *major,
             void *destination,
             size_t destination_size)
 {
     char versioned_name[96];
-    void *symbol;
 
     // NOLINTNEXTLINE(clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling)
     (void)snprintf(versioned_name,
@@ -155,21 +85,24 @@ load_symbol(IcuModule module,
                    "%s_%s",
                    base_name,
                    major);
-    symbol = module_symbol(module, versioned_name);
-    if (symbol == NULL)
-        symbol = module_symbol(module, base_name);
-    if (symbol == NULL)
-        return 0;
-
-    store_function_pointer(destination, destination_size, symbol);
-    return 1;
+    if (infiltratr_dynlib_symbol(module,
+                                 versioned_name,
+                                 destination,
+                                 destination_size))
+    {
+        return 1;
+    }
+    return infiltratr_dynlib_symbol(module,
+                                    base_name,
+                                    destination,
+                                    destination_size) ? 1 : 0;
 }
 
 static void
 close_bridge_modules(IcuBridgeApi *api)
 {
-    module_close(api->i18n);
-    module_close(api->uc);
+    infiltratr_dynlib_close(&api->i18n);
+    infiltratr_dynlib_close(&api->uc);
     *api = (IcuBridgeApi){ 0 };
 }
 
@@ -192,9 +125,8 @@ try_icu_major(const char *major,
     (void)snprintf(i18n_name, sizeof i18n_name, "libicui18n.so.%s", major);
 #endif
 
-    api->uc = module_open(uc_name);
-    api->i18n = module_open(i18n_name);
-    if (api->uc == NULL || api->i18n == NULL)
+    if (!infiltratr_dynlib_open(&api->uc, uc_name) ||
+        !infiltratr_dynlib_open(&api->i18n, i18n_name))
     {
         close_bridge_modules(api);
         return 0;
@@ -202,13 +134,13 @@ try_icu_major(const char *major,
 
 #define LOAD_UC(member_, symbol_) \
     do { \
-        if (!load_symbol(api->uc, symbol_, major, \
+        if (!load_symbol(&api->uc, symbol_, major, \
                          (void *)&api->member_, sizeof api->member_)) \
             goto missing_symbol; \
     } while (0)
 #define LOAD_I18N(member_, symbol_) \
     do { \
-        if (!load_symbol(api->i18n, symbol_, major, \
+        if (!load_symbol(&api->i18n, symbol_, major, \
                          (void *)&api->member_, sizeof api->member_)) \
             goto missing_symbol; \
     } while (0)

@@ -24,11 +24,12 @@ Calendar Plus has three deliberate layers:
 
 - `shared/infiltratr-common` is a Git submodule pinned to the GPL-3.0-or-later
   C11 foundation in the [Infiltrator Libraries](https://github.com/The-First-Infiltrator/Infiltrator-Libraries)
-  repository. Calendar Plus 3.9.8 compiles only Common's dependency-free
-  `core.c` and `arithmetic.c`: project identity, strict parsing, string helpers,
-  clamping, Euclidean signed division/remainder and saturating signed
-  subtraction. Calendar-specific code does not carry Common's formatting or
-  POSIX providers.
+  repository. Calendar Plus 3.9.8 compiles Common's dependency-free
+  `core.c`, `arithmetic.c` and `timing.c`, plus the thin cross-platform
+  `dynlib.c` adapter: project identity, strict parsing, string helpers,
+  clamping, negative-safe arithmetic, phase-aligned timer policy and runtime
+  library loading. Calendar-specific code does not carry Common's formatting or
+  POSIX file/path providers.
 - The C core owns calendar arithmetic, alternative-clock calculations,
   boundary scheduling, the 42-cell grid and event interval semantics. Its
   records and callback interfaces do not depend on GObject, GVariant, GJS or a
@@ -134,10 +135,10 @@ interactive smoke test.
   `clock-engine`, `event-core` and `event-source`.
 - Update the `shared/infiltratr-common` submodule only to a reviewed, tested
   Infiltratr Libraries release commit. Never edit a private application copy.
-- Infiltratr Common 1.6 owns the generic parsing/string/numeric primitives used
-  here, including negative-safe Euclidean division/remainder and saturating
-  signed subtraction. Calendar systems, astronomy, event semantics and timer
-  adapters remain Calendar Plus code.
+- Infiltratr Common 1.8 owns the generic parsing/string/numeric primitives,
+  phase-aligned timing policy and cross-platform runtime-loader mechanics used
+  here. Calendar systems, astronomy, event semantics, ICU symbol policy and
+  timer/main-loop adapters remain Calendar Plus code.
 - Add built-in calendars and clocks through their provider tables, then run
   `make update-settings`.
 - After runtime JavaScript or JSON changes, run `make update-runtime-hashes`.

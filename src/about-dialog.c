@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Shannon Smith
 
 #include <glib.h>
-#include <gmodule.h>
+#include <infiltratr/dynlib.h>
 #include <libintl.h>
 #include <locale.h>
 #include <stdio.h>
@@ -42,7 +42,7 @@ typedef struct
 } Gtk3Api;
 
 static Gtk3Api gtk_api;
-static GModule *gtk_module;
+static InfiltratrDynlib gtk_module = INFILTRATR_DYNLIB_INIT;
 
 #ifndef GETTEXT_PACKAGE
 #define GETTEXT_PACKAGE "calendar-plus@the-infiltratr"
@@ -53,14 +53,19 @@ static GModule *gtk_module;
 static gboolean
 load_gtk(void)
 {
-    gtk_module = g_module_open("libgtk-3.so.0", G_MODULE_BIND_LAZY |
-                                                G_MODULE_BIND_LOCAL);
-    if (gtk_module == NULL)
+    if (!infiltratr_dynlib_open(&gtk_module, "libgtk-3.so.0"))
         return FALSE;
 
 #define LOAD_GTK(member, symbol) \
-    if (!g_module_symbol(gtk_module, symbol, (gpointer *)&gtk_api.member)) \
-        return FALSE
+    do { \
+        if (!infiltratr_dynlib_symbol(&gtk_module, symbol, \
+                                      &gtk_api.member, \
+                                      sizeof gtk_api.member)) { \
+            infiltratr_dynlib_close(&gtk_module); \
+            gtk_api = (Gtk3Api){ 0 }; \
+            return FALSE; \
+        } \
+    } while (0)
 
     LOAD_GTK(init_check, "gtk_init_check");
     LOAD_GTK(about_dialog_new, "gtk_about_dialog_new");
@@ -143,8 +148,7 @@ main(int argc,
     }
     if (!load_gtk())
     {
-        fprintf(stderr, "%s: %s\n", _("Unable to load GTK 3"),
-                g_module_error());
+        fprintf(stderr, "%s\n", _("Unable to load GTK 3"));
         return 1;
     }
     if (!gtk_api.init_check(&argc, &argv))
@@ -157,6 +161,6 @@ main(int argc,
     gtk_api.widget_show(dialog);
     (void) gtk_api.dialog_run((GtkDialog *) dialog);
     gtk_api.widget_destroy(dialog);
-    g_module_close(gtk_module);
+    infiltratr_dynlib_close(&gtk_module);
     return 0;
 }
