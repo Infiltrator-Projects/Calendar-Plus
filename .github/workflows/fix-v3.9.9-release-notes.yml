@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+name: fix-v3.9.9-release-notes
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/fix-v3.9.9-release-notes.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Replace misleading generated release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          repo="$GITHUB_REPOSITORY"
+          tag="v3.9.9"
+          expected="31add00a97c3eee5fb5390ea44ba4c158dd63a66"
+
+          actual=$(gh api "repos/${repo}/git/ref/tags/${tag}" --jq '.object.sha')
+          test "$actual" = "$expected"
+
+          cat > release-notes.md <<'EOF'
+          ## Calendar Plus 3.9.9
+
+          Calendar Plus 3.9.9 uses **Infiltratr Common 1.9.0**, pinned exactly to `a65b279b40682791f2cfefb4d9bdc274790b0c77`.
+
+          - Replace floating-point discrete-clock boundary workarounds with Common 1.9's exact integer/rational timing primitives.
+          - Harden local-time phase arithmetic across the full signed 64-bit instant range.
+          - Define and test the complete supported Gregorian and Julian civil-year domain.
+          - Keep Calendar-specific calendar, astronomy, ICU policy and Cinnamon adapter behaviour local while reusing the complete shared timing algorithms.
+          - Pass GCC, Clang, ASan/UBSan, static-analysis, coverage and complete Debian release-package gates before publication.
+
+          Release tag `v3.9.9` and `main` identify the same source commit: `31add00a97c3eee5fb5390ea44ba4c158dd63a66`.
+          EOF
+
+          gh release edit "$tag" \
+            --repo "$repo" \
+            --title "Calendar Plus 3.9.9" \
+            --notes-file release-notes.md \
+            --latest
+
+          gh api "repos/${repo}/releases/tags/${tag}" --jq '.tag_name' | grep -qx "$tag"
+          gh api "repos/${repo}/releases/tags/${tag}" --jq '.name' | grep -qx 'Calendar Plus 3.9.9'
+          gh api "repos/${repo}/releases/tags/${tag}" --jq '.assets[].name' | grep -qx 'calendar-plus_3.9.9_amd64.deb'
+          gh api "repos/${repo}/releases/tags/${tag}" --jq '.assets[].name' | grep -qx 'calendar-plus-3.9.9-local-folder.run'
