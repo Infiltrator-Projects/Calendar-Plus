@@ -52,5 +52,9 @@ jobs:
 
           gh api "repos/${repo}/releases/tags/${tag}" --jq '.tag_name' | grep -qx "$tag"
           gh api "repos/${repo}/releases/tags/${tag}" --jq '.name' | grep -qx 'Calendar Plus 3.9.9'
+          gh api "repos/${repo}/releases/tags/${tag}" --jq '.body' | grep -Fqx '## Calendar Plus 3.9.9' -m1 || \
+            gh api "repos/${repo}/releases/tags/${tag}" --jq '.body' | grep -Fq 'Infiltratr Common 1.9.0'
           gh api "repos/${repo}/releases/tags/${tag}" --jq '.assets[].name' | grep -qx 'calendar-plus_3.9.9_amd64.deb'
           gh api "repos/${repo}/releases/tags/${tag}" --jq '.assets[].name' | grep -qx 'calendar-plus-3.9.9-local-folder.run'
+
+          gh api -X DELETE "repos/${repo}/git/refs/heads/fix-v3.9.9-release-notes"
