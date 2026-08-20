@@ -46,9 +46,9 @@ def main() -> None:
     assert "shared/infiltratr-common" in makefile
     assert (
         "INFILTRATR_COMMON_COMMIT := "
-        "318b1babc7343403ae5e222ea01235a0fc84d752"
+        "a65b279b40682791f2cfefb4d9bdc274790b0c77"
     ) in makefile
-    assert "INFILTRATR_COMMON_VERSION := 1.8.0" in makefile
+    assert "INFILTRATR_COMMON_VERSION := 1.9.0" in makefile
     assert "normal `make` automatically retrieves" in read("README.md")
     assert "common-bootstrap: common-check" in makefile
     assert "git -C \"$(INFILTRATR_COMMON_DIR)\" fetch -q --depth 1 origin" in makefile
@@ -139,6 +139,7 @@ def main() -> None:
     assert (ROOT / "src/calendar-gvariant-adapter.c").is_file()
     assert (ROOT / "src/event-gvariant-adapter.c").is_file()
     assert (ROOT / "src/clock-glib-adapter.c").is_file()
+    assert (ROOT / "tests/test-exact-clock-boundaries.c").is_file()
     assert "g_variant_" not in calendar_system
     assert "g_timeout_" not in read("src/system-clock.c")
     assert "CORE_SOURCES :=" in makefile
@@ -160,7 +161,7 @@ def main() -> None:
     assert "clang-analyzer-*" in makefile
     assert (ROOT / "tests/abi-baseline.txt").is_file()
     shared = ROOT / "shared/infiltratr-common"
-    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.8.0"
+    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.9.0"
     assert (shared / "LICENSE").is_file()
     assert (shared / "include/infiltratr/core.h").is_file()
     assert (shared / "include/infiltratr/arithmetic.h").is_file()
@@ -180,9 +181,11 @@ def main() -> None:
     assert "infiltratr_i64_floor_divmod" in read(
         "shared/infiltratr-common/include/infiltratr/arithmetic.h"
     )
-    assert "infiltratr_period_remaining" in read(
-        "shared/infiltratr-common/include/infiltratr/timing.h"
-    )
+    timing_header = read("shared/infiltratr-common/include/infiltratr/timing.h")
+    assert "infiltratr_period_remaining" in timing_header
+    assert "infiltratr_i64_period_remaining" in timing_header
+    assert "infiltratr_cycle_partition_u64" in timing_header
+    assert "infiltratr_microseconds_to_milliseconds_ceil" in timing_header
     assert "infiltratr_dynlib_symbol" in read(
         "shared/infiltratr-common/include/infiltratr/dynlib.h"
     )
