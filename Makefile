@@ -9,14 +9,14 @@ G_IR_COMPILER ?= g-ir-compiler
 PREFIX ?= /usr
 DESTDIR ?=
 
-VERSION := 3.9.8
+VERSION := 3.9.9
 UUID := calendar-plus@the-infiltratr
 BUILD_DIR := build
 DIST_DIR := dist
 INFILTRATR_COMMON_DIR := shared/infiltratr-common
 INFILTRATR_COMMON_URL := https://github.com/The-First-Infiltrator/Infiltrator-Libraries.git
-INFILTRATR_COMMON_COMMIT := 318b1babc7343403ae5e222ea01235a0fc84d752
-INFILTRATR_COMMON_VERSION := 1.8.0
+INFILTRATR_COMMON_COMMIT := a65b279b40682791f2cfefb4d9bdc274790b0c77
+INFILTRATR_COMMON_VERSION := 1.9.0
 LIB_BASENAME := calendar-plus
 LIB_SONAME := lib$(LIB_BASENAME).so.0
 LIB_REALNAME := lib$(LIB_BASENAME).so.0.0.0
@@ -357,6 +357,17 @@ $(BUILD_DIR)/test-portable-core: \
 		$(INFILTRATR_COMMON_ARCHIVE) -o $@ $(LDFLAGS) $(CORE_LIBS) \
 		$(ICU_BRIDGE_LIBS) $(MATH_LIBS)
 
+$(BUILD_DIR)/test-exact-clock-boundaries: \
+		tests/test-exact-clock-boundaries.c \
+		$(CORE_SOURCES) \
+		$(CORE_HEADERS) \
+		$(INFILTRATR_COMMON_ARCHIVE)
+	@mkdir -p "$(BUILD_DIR)"
+	$(CC) $(CPPFLAGS) $(CFLAGS) -frandom-seed=$(REPRO_SEED_PREFIX)-test-exact-clock-boundaries $(CORE_CFLAGS) \
+		tests/test-exact-clock-boundaries.c $(CORE_SOURCES) \
+		$(INFILTRATR_COMMON_ARCHIVE) -o $@ $(LDFLAGS) $(CORE_LIBS) \
+		$(ICU_BRIDGE_LIBS) $(MATH_LIBS)
+
 $(BUILD_DIR)/test-infiltratr-common: \
 		$(INFILTRATR_COMMON_DIR)/tests/arithmetic_smoke.c \
 		$(INFILTRATR_COMMON_ARCHIVE)
@@ -366,11 +377,13 @@ $(BUILD_DIR)/test-infiltratr-common: \
 
 test: $(BUILD_DIR)/test-time-formats $(BUILD_DIR)/test-properties \
 	$(BUILD_DIR)/test-portable-core \
+	$(BUILD_DIR)/test-exact-clock-boundaries \
 	$(BUILD_DIR)/test-infiltratr-common \
 	$(BUILD_DIR)/$(ABOUT_BINARY)
 	./$(BUILD_DIR)/test-time-formats
 	./$(BUILD_DIR)/test-properties
 	./$(BUILD_DIR)/test-portable-core
+	./$(BUILD_DIR)/test-exact-clock-boundaries
 	./$(BUILD_DIR)/test-infiltratr-common
 	@./$(BUILD_DIR)/$(ABOUT_BINARY) --print-metadata | \
 		grep -qx 'version=$(VERSION)'
@@ -442,8 +455,9 @@ validate-architecture:
 	python3 tests/test-architecture.py
 
 core-check: check-deps $(CORE_ARCHIVE) $(BUILD_DIR)/test-portable-core \
-	validate-architecture
+	$(BUILD_DIR)/test-exact-clock-boundaries validate-architecture
 	./$(BUILD_DIR)/test-portable-core
+	./$(BUILD_DIR)/test-exact-clock-boundaries
 
 check: all test validate-js validate-translations validate-sources validate-package-inputs \
 	validate-release-model validate-architecture validate-exports validate-abi validate-runtime-deps smoke-gjs path-space-smoke
