@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+name: publish-v3.9.9
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-v3.9.9.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        with:
+          submodules: true
+
+      - name: Install release dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential debhelper devscripts gettext gh gobject-introspection gjs \
+            gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
+            pkg-config python3 ripgrep lintian shellcheck zip
+
+      - name: Build and validate release files
+        run: make release-check
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          VERSION=3.9.9
+          TAG=v${VERSION}
+          test "$(sed -n 's/^VERSION := //p' Makefile)" = "$VERSION"
+
+          mapfile -t assets < <(find dist -maxdepth 1 -type f -printf '%p\n' | sort)
+          test "${#assets[@]}" -eq 2
+          printf '%s\n' "${assets[@]}" | grep -Eq '/calendar-plus_3\.9\.9_amd64\.deb$'
+          printf '%s\n' "${assets[@]}" | grep -Eq '/calendar-plus-3\.9\.9-local-folder\.run$'
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" --force
+            existing=$(git rev-list -n 1 "$TAG")
+            if [ "$existing" != "$GITHUB_SHA" ]; then
+              echo "$TAG exists at $existing; expected $GITHUB_SHA." >&2
+              exit 1
+            fi
+            gh release upload "$TAG" "${assets[@]}" --clobber
+            gh release edit "$TAG" --title "Calendar Plus $VERSION" --latest
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            "${assets[@]}" \
+            --target "$GITHUB_SHA" \
+            --title "Calendar Plus $VERSION" \
+            --generate-notes \
+            --latest
