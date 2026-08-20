@@ -96,13 +96,7 @@ jobs:
           test -s "$notes"
 
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "$deb" "$installer" --clobber
-            gh release edit "$tag" \
-              --title "Calendar Plus $version" \
-              --notes-file "$notes" \
-              --draft=false \
-              --prerelease=false \
-              --latest
+            printf 'Existing release %s is immutable; verifying only.\n' "$tag"
           else
             gh release create "$tag" "$deb" "$installer" \
               --verify-tag \
@@ -132,6 +126,15 @@ jobs:
             if [[ "$remote_size" != "$local_size" ]]; then
               printf 'Release asset %s has size %s; expected %s.\n' \
                 "$name" "$remote_size" "$local_size" >&2
+              exit 1
+            fi
+
+            local_digest="sha256:$(sha256sum "$asset" | awk '{print $1}')"
+            remote_digest=$(jq -r --arg name "$name" \
+              '[.assets[] | select(.name == $name) | .digest][0] // ""' \
+              <<<"$release_json")
+            if [[ -n "$remote_digest" && "$remote_digest" != "$local_digest" ]]; then
+              printf 'Release asset %s digest mismatch.\n' "$name" >&2
               exit 1
             fi
           done
