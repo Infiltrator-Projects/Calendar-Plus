@@ -1,0 +1,137 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+name: publish-release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to validate and publish
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-release-${{ github.repository }}-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out the immutable release tag
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install release dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential debhelper devscripts gettext gh gobject-introspection gjs \
+            gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
+            pkg-config python3 ripgrep lintian shellcheck zip
+
+      - name: Validate, build and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version=$(sed -n 's/^VERSION := //p' Makefile)
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            printf 'Invalid source version: %s\n' "$version" >&2
+            exit 1
+          fi
+
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="$DISPATCH_TAG"
+          fi
+          expected_tag="v${version}"
+          if [[ "$tag" != "$expected_tag" ]]; then
+            printf 'Tag %s does not match source version %s.\n' "$tag" "$version" >&2
+            exit 1
+          fi
+
+          git fetch origin "refs/tags/${tag}:refs/tags/${tag}"
+          tag_commit=$(git rev-list -n 1 "$tag")
+          head_commit=$(git rev-parse HEAD)
+          if [[ "$tag_commit" != "$head_commit" ]]; then
+            printf 'Tag %s points to %s, not checked-out commit %s.\n' \
+              "$tag" "$tag_commit" "$head_commit" >&2
+            exit 1
+          fi
+
+          make release-check
+
+          deb="dist/calendar-plus_${version}_amd64.deb"
+          installer="dist/calendar-plus-${version}-local-folder.run"
+          test -f "$deb"
+          test -x "$installer"
+
+          notes="${RUNNER_TEMP}/release-notes.md"
+          awk '
+            NR == 1 { next }
+            /^ -- / { exit }
+            {
+              sub(/^  \* /, "- ")
+              print
+            }
+          ' debian/changelog | sed '/^[[:space:]]*$/d' > "$notes"
+          test -s "$notes"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$deb" "$installer" --clobber
+            gh release edit "$tag" \
+              --title "Calendar Plus $version" \
+              --notes-file "$notes" \
+              --draft=false \
+              --prerelease=false \
+              --latest
+          else
+            gh release create "$tag" "$deb" "$installer" \
+              --verify-tag \
+              --title "Calendar Plus $version" \
+              --notes-file "$notes" \
+              --latest
+          fi
+
+          expected_assets=$(printf '%s\n%s\n' \
+            "${deb##*/}" "${installer##*/}" | sort)
+          published_assets=$(gh release view "$tag" --json assets \
+            --jq '.assets[].name' | sort)
+          if [[ "$published_assets" != "$expected_assets" ]]; then
+            printf 'Release %s has an unexpected asset set.\n' "$tag" >&2
+            printf 'Expected:\n%s\nPublished:\n%s\n' \
+              "$expected_assets" "$published_assets" >&2
+            exit 1
+          fi
+
+          release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}")
+          for asset in "$deb" "$installer"; do
+            name="${asset##*/}"
+            local_size=$(stat -c '%s' "$asset")
+            remote_size=$(jq -r --arg name "$name" \
+              '[.assets[] | select(.name == $name) | .size][0] // 0' \
+              <<<"$release_json")
+            if [[ "$remote_size" != "$local_size" ]]; then
+              printf 'Release asset %s has size %s; expected %s.\n' \
+                "$name" "$remote_size" "$local_size" >&2
+              exit 1
+            fi
+          done
