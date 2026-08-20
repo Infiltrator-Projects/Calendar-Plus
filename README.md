@@ -24,12 +24,12 @@ Calendar Plus has three deliberate layers:
 
 - `shared/infiltratr-common` is a Git submodule pinned to the GPL-3.0-or-later
   C11 foundation in the [Infiltrator Libraries](https://github.com/The-First-Infiltrator/Infiltrator-Libraries)
-  repository. Calendar Plus 3.9.8 compiles Common's dependency-free
+  repository. Calendar Plus 3.9.9 compiles Common's dependency-free
   `core.c`, `arithmetic.c` and `timing.c`, plus the thin cross-platform
   `dynlib.c` adapter: project identity, strict parsing, string helpers,
-  clamping, negative-safe arithmetic, phase-aligned timer policy and runtime
-  library loading. Calendar-specific code does not carry Common's formatting or
-  POSIX file/path providers.
+  clamping, negative-safe arithmetic, exact discrete/continuous phase-aligned
+  timer policy and runtime library loading. Calendar-specific code does not
+  carry Common's formatting or POSIX file/path providers.
 - The C core owns calendar arithmetic, alternative-clock calculations,
   boundary scheduling, the 42-cell grid and event interval semantics. Its
   records and callback interfaces do not depend on GObject, GVariant, GJS or a
@@ -112,16 +112,16 @@ Git clones and GitHub's automatic source archives use the same pinned shared
 source commit. If the shared tree is absent, the normal build retrieves that
 exact commit automatically; no manual submodule step is required.
 
-`make check` covers C reference/property tests, the adapter-free core,
-JavaScript lifecycle and syntax, GJS/typelib compatibility, exported symbols,
-immutable ABI history, translations, generated settings, source integrity,
-architecture boundaries and builds from paths containing spaces. Calendar
-reference anchors cover every registered provider. Additional gates are
-`make sanitize`, `make coverage`, `make static-analysis`,
-`make reproducible-build` and `make release-check`; the release gate also runs
-Lintian against the generic Debian package. The last command builds and
-validates the two custom release files in `dist/`; GitHub supplies the tagged
-source archives automatically.
+`make check` covers C reference/property tests, exact discrete-clock boundaries,
+the complete Calendar civil-year domain, the adapter-free core, JavaScript
+lifecycle and syntax, GJS/typelib compatibility, exported symbols, immutable
+ABI history, translations, generated settings, source integrity, architecture
+boundaries and builds from paths containing spaces. Calendar reference anchors
+cover every registered provider. Additional gates are `make sanitize`,
+`make coverage`, `make static-analysis`, `make reproducible-build` and
+`make release-check`; the release gate also runs Lintian against the generic
+Debian package. The last command builds and validates the two custom release
+files in `dist/`; GitHub supplies the tagged source archives automatically.
 
 On an installed Cinnamon session, `tools/cinnamon-smoke.sh` checks installed
 runtime hashes, metadata, About helper, native library/typelib compatibility
@@ -135,10 +135,11 @@ interactive smoke test.
   `clock-engine`, `event-core` and `event-source`.
 - Update the `shared/infiltratr-common` submodule only to a reviewed, tested
   Infiltratr Libraries release commit. Never edit a private application copy.
-- Infiltratr Common 1.8 owns the generic parsing/string/numeric primitives,
-  phase-aligned timing policy and cross-platform runtime-loader mechanics used
-  here. Calendar systems, astronomy, event semantics, ICU symbol policy and
-  timer/main-loop adapters remain Calendar Plus code.
+- Infiltratr Common 1.9 owns the generic parsing/string/numeric primitives,
+  exact discrete and continuous phase-aligned timing policy and cross-platform
+  runtime-loader mechanics used here. Calendar systems, astronomy, event
+  semantics, ICU symbol policy and timer/main-loop adapters remain Calendar Plus
+  code.
 - Add built-in calendars and clocks through their provider tables, then run
   `make update-settings`.
 - After runtime JavaScript or JSON changes, run `make update-runtime-hashes`.
