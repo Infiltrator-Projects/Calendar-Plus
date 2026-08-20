@@ -94,23 +94,40 @@ static gint64
 local_microseconds_of_day(gint64 unix_microseconds,
                           gint utc_offset_seconds)
 {
+    const gint64 instant_phase =
+        positive_modulo(unix_microseconds, MICROSECONDS_PER_DAY);
     const gint64 offset_microseconds =
         (gint64)utc_offset_seconds * G_USEC_PER_SEC;
+    const gint64 offset_phase =
+        positive_modulo(offset_microseconds, MICROSECONDS_PER_DAY);
 
-    return positive_modulo(unix_microseconds + offset_microseconds,
+    /* Both phases are below one day, so their sum cannot overflow gint64. */
+    return positive_modulo(instant_phase + offset_phase,
                            MICROSECONDS_PER_DAY);
 }
 
-/* Absolute scaling prevents accumulated error after suspend or delayed ticks. */
+/*
+ * Discrete civil-day displays use Common's exact rational partition primitive.
+ * No floating-point product or epsilon is involved at a display boundary.
+ */
 static guint
 fractional_day_tick(gint64 microseconds_of_day,
                     guint ticks_per_day)
 {
-    const long double scaled =
-        (long double)microseconds_of_day * ticks_per_day /
-        MICROSECONDS_PER_DAY;
+    uint64_t tick = 0;
 
-    return (guint)floorl(scaled);
+    g_return_val_if_fail(microseconds_of_day >= 0, 0);
+    g_return_val_if_fail(ticks_per_day > 0, 0);
+    g_return_val_if_fail(
+        infiltratr_cycle_partition_u64((uint64_t)microseconds_of_day,
+                                       (uint64_t)MICROSECONDS_PER_DAY,
+                                       (uint64_t)ticks_per_day,
+                                       &tick,
+                                       NULL),
+        0);
+
+    /* The exact partition index is strictly below the guint partition count. */
+    return (guint)tick;
 }
 
 static void
@@ -160,42 +177,60 @@ delay_seconds_to_milliseconds(long double seconds)
 }
 
 static guint
-delay_microseconds_to_milliseconds(long double microseconds)
+delay_continuous_microseconds_to_milliseconds(long double microseconds)
 {
     return delay_seconds_to_milliseconds(
         microseconds / (long double)G_USEC_PER_SEC);
 }
 
-/*
- * Derive the next boundary from the absolute phase, not from the previous
- * callback. Rounding upward to whole milliseconds ensures the timer cannot
- * fire before the displayed unit changes.
- */
 static guint
-delay_for_period(gint64 position_microseconds,
-                 long double period_microseconds)
+delay_exact_microseconds_to_milliseconds(uint64_t microseconds)
 {
-    long double remaining = 0.0L;
+    uint64_t milliseconds = 0;
 
-    if (!infiltratr_period_remaining((long double)position_microseconds,
-                                     period_microseconds,
-                                     &remaining))
+    if (!infiltratr_microseconds_to_milliseconds_ceil(microseconds,
+                                                      &milliseconds))
     {
         return 1;
     }
-    if (remaining < 0.5L)
-        remaining = period_microseconds;
+    return milliseconds > G_MAXUINT ? G_MAXUINT : (guint)milliseconds;
+}
 
-    return delay_microseconds_to_milliseconds(remaining);
+/*
+ * Integral periodic clocks use exact Euclidean phase arithmetic. Exact
+ * boundaries return one full period, so callers never need an epsilon repair.
+ */
+static guint
+delay_for_integer_period(gint64 position_microseconds,
+                         gint64 period_microseconds)
+{
+    uint64_t remaining = 0;
+
+    if (!infiltratr_i64_period_remaining(position_microseconds,
+                                         period_microseconds,
+                                         &remaining))
+    {
+        return 1;
+    }
+    return delay_exact_microseconds_to_milliseconds(remaining);
 }
 
 static guint
 delay_for_day_ticks(gint64 microseconds_of_day,
                     guint ticks_per_day)
 {
-    return delay_for_period(
-        microseconds_of_day,
-        (long double)MICROSECONDS_PER_DAY / ticks_per_day);
+    uint64_t remaining = 0;
+
+    if (microseconds_of_day < 0 || ticks_per_day == 0 ||
+        !infiltratr_cycle_partition_u64((uint64_t)microseconds_of_day,
+                                        (uint64_t)MICROSECONDS_PER_DAY,
+                                        (uint64_t)ticks_per_day,
+                                        NULL,
+                                        &remaining))
+    {
+        return 1;
+    }
+    return delay_exact_microseconds_to_milliseconds(remaining);
 }
 
 static guint
@@ -257,8 +292,11 @@ delay_decimal_provider(gint64 unix_microseconds,
 static gint64
 internet_microseconds(gint64 unix_microseconds)
 {
+    const gint64 instant_phase =
+        positive_modulo(unix_microseconds, MICROSECONDS_PER_DAY);
+
     return positive_modulo(
-        unix_microseconds + (gint64)SECONDS_PER_HOUR * G_USEC_PER_SEC,
+        instant_phase + (gint64)SECONDS_PER_HOUR * G_USEC_PER_SEC,
         MICROSECONDS_PER_DAY);
 }
 
@@ -324,7 +362,7 @@ delay_unix_provider(gint64 unix_microseconds,
     (void)utc_offset_seconds;
     (void)show_seconds;
     (void)longitude;
-    return delay_for_period(unix_microseconds, G_USEC_PER_SEC);
+    return delay_for_integer_period(unix_microseconds, G_USEC_PER_SEC);
 }
 
 static gchar *
@@ -654,9 +692,9 @@ delay_chinese_provider(gint64 unix_microseconds,
         (gint64)SECONDS_PER_HOUR * G_USEC_PER_SEC;
 
     (void)longitude;
-    return delay_for_period(
+    return delay_for_integer_period(
         shifted,
-        (long double)2 * SECONDS_PER_HOUR * G_USEC_PER_SEC);
+        (gint64)2 * SECONDS_PER_HOUR * G_USEC_PER_SEC);
 }
 
 typedef struct
@@ -780,7 +818,7 @@ delay_roman_temporal_provider(gint64 unix_microseconds,
         return 3600000;
     }
 
-    return delay_microseconds_to_milliseconds(
+    return delay_continuous_microseconds_to_milliseconds(
         period.seconds_to_next * G_USEC_PER_SEC);
 }
 
@@ -866,7 +904,7 @@ delay_japanese_temporal_provider(gint64 unix_microseconds,
         return 3600000;
     }
 
-    return delay_microseconds_to_milliseconds(
+    return delay_continuous_microseconds_to_milliseconds(
         period.seconds_to_next * G_USEC_PER_SEC);
 }
 
