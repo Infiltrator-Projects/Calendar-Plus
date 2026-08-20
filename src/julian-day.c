@@ -12,7 +12,7 @@
  * described by the US Naval Observatory and Dershowitz/Reingold. Euclidean
  * division is essential for proleptic years before the common era because C
  * division truncates toward zero; that generic negative-safe arithmetic is
- * delegated to Infiltratr Common 1.6.0.
+ * delegated to Infiltratr Common.
  */
 
 #include "julian-day.h"

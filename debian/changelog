@@ -1,3 +1,14 @@
+calendar-plus (3.9.9) trixie; urgency=medium
+
+  * Move discrete clock partitioning and exact next-boundary timing into
+    Infiltratr Common 1.9.0 across the complete declared integer domains.
+  * Remove Calendar Plus's floating boundary repair and use exact rational
+    partition arithmetic for decimal, Internet, hexadecimal and day clocks.
+  * Avoid signed overflow while reducing extreme instants and UTC offsets to
+    civil-day phase, and verify the complete gint Gregorian/Julian year domain.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Thu, 20 Aug 2026 10:29:00 +1000
+
 calendar-plus (3.9.8) trixie; urgency=medium
 
   * Move negative-safe Euclidean division and remainder into Infiltratr Common

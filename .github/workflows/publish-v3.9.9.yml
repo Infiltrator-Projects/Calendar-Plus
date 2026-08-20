@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Shannon Smith
 
-name: publish-v3.9.8
+name: publish-v3.9.9
 
 on:
   push:
     branches: [main]
     paths:
-      - .github/workflows/publish-v3.9.8.yml
+      - .github/workflows/publish-v3.9.9.yml
 
 permissions:
   contents: write
@@ -38,21 +38,30 @@ jobs:
         run: |
           set -euo pipefail
 
-          test "$(sed -n 's/^VERSION := //p' Makefile)" = "3.9.8"
+          VERSION=3.9.9
+          TAG=v${VERSION}
+          test "$(sed -n 's/^VERSION := //p' Makefile)" = "$VERSION"
 
           mapfile -t assets < <(find dist -maxdepth 1 -type f -printf '%p\n' | sort)
           test "${#assets[@]}" -eq 2
-          printf '%s\n' "${assets[@]}" | grep -Eq '/calendar-plus_3\.9\.8_amd64\.deb$'
-          printf '%s\n' "${assets[@]}" | grep -Eq '/calendar-plus-3\.9\.8-local-folder\.run$'
+          printf '%s\n' "${assets[@]}" | grep -Eq '/calendar-plus_3\.9\.9_amd64\.deb$'
+          printf '%s\n' "${assets[@]}" | grep -Eq '/calendar-plus-3\.9\.9-local-folder\.run$'
 
-          if gh release view v3.9.8 >/dev/null 2>&1; then
-            echo "v3.9.8 already exists; refusing to create a duplicate release."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" --force
+            existing=$(git rev-list -n 1 "$TAG")
+            if [ "$existing" != "$GITHUB_SHA" ]; then
+              echo "$TAG exists at $existing; expected $GITHUB_SHA." >&2
+              exit 1
+            fi
+            gh release upload "$TAG" "${assets[@]}" --clobber
+            gh release edit "$TAG" --title "Calendar Plus $VERSION" --latest
             exit 0
           fi
 
-          gh release create v3.9.8 \
+          gh release create "$TAG" \
             "${assets[@]}" \
             --target "$GITHUB_SHA" \
-            --title "Calendar Plus 3.9.8" \
+            --title "Calendar Plus $VERSION" \
             --generate-notes \
             --latest
