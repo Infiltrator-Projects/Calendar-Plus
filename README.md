@@ -58,13 +58,14 @@ Each release is intended to be simple for end users:
 | --- | --- |
 | `calendar-plus_<version>_amd64.deb` | Generic amd64 package built with conservative `-O2` optimisation. |
 | `calendar-plus-<version>-local-folder.run` | Verifies its embedded source, builds with `-O3 -march=native -mtune=native -flto=auto`, creates a `+native1` Debian package and installs it through APT. |
+| `Calendar-Plus-<version>-local-source.zip` | Deterministic tested source archive containing Calendar Plus and the exact pinned Infiltratr Common source. |
 
-GitHub automatically provides `Source code (zip)` and `Source code (tar.gz)`
-for every tagged release. When one of those source archives is extracted, a
-normal `make` automatically retrieves the exact pinned Infiltratr Common commit
-into `shared/infiltratr-common` if it is not already present. Calendar Plus and
-the shared library therefore remain separate source trees, but the person
-building Calendar Plus does not have to manage that relationship manually.
+The explicit source ZIP is the project's tested source deliverable and is
+published with the `.deb` and `.run`. GitHub's automatic `Source code (zip)`
+and `Source code (tar.gz)` links remain available as convenience snapshots, but
+they contain only the submodule reference. When one of those automatic archives
+is used, a normal `make` retrieves the exact pinned Infiltratr Common commit into
+`shared/infiltratr-common` if it is not already present.
 
 The local `.run` builder already carries the required Calendar Plus and shared
 source trees in its verified payload. The generic package never uses
@@ -119,9 +120,8 @@ ABI history, translations, generated settings, source integrity, architecture
 boundaries and builds from paths containing spaces. Calendar reference anchors
 cover every registered provider. Additional gates are `make sanitize`,
 `make coverage`, `make static-analysis`, `make reproducible-build` and
-`make release-check`; the release gate also runs Lintian against the generic
-Debian package. The last command builds and validates the two custom release
-files in `dist/`; GitHub supplies the tagged source archives automatically.
+`make release-check`; the release gate builds and validates the generic `.deb`,
+the native `.run`, and the deterministic source ZIP in `dist/`.
 
 On an installed Cinnamon session, `tools/cinnamon-smoke.sh` checks installed
 runtime hashes, metadata, About helper, native library/typelib compatibility
@@ -152,8 +152,10 @@ interactive smoke test.
 - Existing entries in `tests/abi-baseline.txt` are historical ABI records and
   are not changed by routine releases; new API may add entries and version nodes.
 - A release updates the Makefile version, `metadata.json`, `SOURCE_DATE_EPOCH`
-  and the top Debian changelog entry, then publishes the `.deb` and `.run`;
-  GitHub provides the tagged source archives automatically.
+  and the top Debian changelog entry. Ordinary pushes and tags never publish.
+  The explicit **publish-release** workflow validates current `main`, creates the
+  immutable version tag itself, and publishes the `.deb`, `.run`, and tested
+  source ZIP as one release.
 
 ## Model limits
 
