@@ -9,7 +9,7 @@ G_IR_COMPILER ?= g-ir-compiler
 PREFIX ?= /usr
 DESTDIR ?=
 
-VERSION := 3.9.9
+VERSION := 3.9.10
 UUID := calendar-plus@the-infiltratr
 BUILD_DIR := build
 DIST_DIR := dist
