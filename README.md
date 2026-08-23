@@ -44,6 +44,8 @@ cd Calendar-Plus
 make check
 ```
 
+Git clones carry the pinned Common submodule. When a GitHub automatic source archive is used instead and the shared tree is absent, normal `make` automatically retrieves the exact pinned Common commit before building.
+
 Useful verification targets include:
 
 ```bash
@@ -100,4 +102,4 @@ Historical calendars and clocks are computational models. Islamic results are no
 
 ## Licence
 
-Calendar Plus is free software licensed under the GNU General Public License version 3 or, at your option, any later version (`GPL-3.0-or-later`). The pinned Infiltratr Common dependency uses the same licence. Provenance and retained third-party notices are recorded in `debian/copyright` and the repository licence files.
+Calendar Plus is GPL-3.0-or-later. It is free software licensed under the GNU General Public License version 3 or, at your option, any later version. The pinned Infiltratr Common dependency uses the same licence. Provenance and retained third-party notices are recorded in `debian/copyright` and the repository licence files.
