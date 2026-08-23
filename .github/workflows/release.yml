@@ -4,32 +4,26 @@
 name: publish-release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Existing version tag to validate and publish
-        required: true
-        type: string
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: publish-release-${{ github.repository }}-${{ inputs.tag || github.ref_name }}
+  group: publish-release-${{ github.repository }}
   cancel-in-progress: false
 
 jobs:
   publish:
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - name: Check out the immutable release tag
+      - name: Check out current main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: main
           fetch-depth: 0
           submodules: recursive
 
@@ -41,39 +35,37 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential debhelper devscripts gettext gh gobject-introspection gjs jq \
             gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
-            pkg-config python3 ripgrep lintian shellcheck zip
+            pkg-config python3 ripgrep lintian shellcheck unzip zip
 
       - name: Validate, build and publish
         env:
           GH_TOKEN: ${{ github.token }}
-          DISPATCH_TAG: ${{ inputs.tag }}
         shell: bash
         run: |
           set -euo pipefail
+
+          git fetch origin main --tags
+          head_commit=$(git rev-parse HEAD)
+          main_commit=$(git rev-parse origin/main)
+          if [[ "$head_commit" != "$main_commit" ]]; then
+            printf 'Release checkout %s is not current main %s.\n' \
+              "$head_commit" "$main_commit" >&2
+            exit 1
+          fi
 
           version=$(sed -n 's/^VERSION := //p' Makefile)
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             printf 'Invalid source version: %s\n' "$version" >&2
             exit 1
           fi
+          tag="v${version}"
 
-          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-            tag="$GITHUB_REF_NAME"
-          else
-            tag="$DISPATCH_TAG"
-          fi
-          expected_tag="v${version}"
-          if [[ "$tag" != "$expected_tag" ]]; then
-            printf 'Tag %s does not match source version %s.\n' "$tag" "$version" >&2
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            printf 'Release tag %s already exists; published releases are immutable.\n' "$tag" >&2
             exit 1
           fi
-
-          git fetch origin "refs/tags/${tag}:refs/tags/${tag}"
-          tag_commit=$(git rev-list -n 1 "$tag")
-          head_commit=$(git rev-parse HEAD)
-          if [[ "$tag_commit" != "$head_commit" ]]; then
-            printf 'Tag %s points to %s, not checked-out commit %s.\n' \
-              "$tag" "$tag_commit" "$head_commit" >&2
+          if gh release view "$tag" >/dev/null 2>&1; then
+            printf 'Release %s already exists; published releases are immutable.\n' "$tag" >&2
             exit 1
           fi
 
@@ -81,8 +73,12 @@ jobs:
 
           deb="dist/calendar-plus_${version}_amd64.deb"
           installer="dist/calendar-plus-${version}-local-folder.run"
+          source="dist/Calendar-Plus-${version}-local-source.zip"
           test -f "$deb"
           test -x "$installer"
+          test -f "$source"
+          unzip -tq "$source"
+          test "$(unzip -p "$source" "Calendar-Plus-${version}/shared/infiltratr-common/VERSION" | tr -d '[:space:]')" = "1.9.0"
 
           notes="${RUNNER_TEMP}/release-notes.md"
           awk '
@@ -95,18 +91,18 @@ jobs:
           ' debian/changelog | sed '/^[[:space:]]*$/d' > "$notes"
           test -s "$notes"
 
-          if gh release view "$tag" >/dev/null 2>&1; then
-            printf 'Existing release %s is immutable; verifying only.\n' "$tag"
-          else
-            gh release create "$tag" "$deb" "$installer" \
-              --verify-tag \
-              --title "Calendar Plus $version" \
-              --notes-file "$notes" \
-              --latest
-          fi
+          git tag "$tag" "$head_commit"
+          git push origin "$tag"
 
-          expected_assets=$(printf '%s\n%s\n' \
-            "${deb##*/}" "${installer##*/}" | sort)
+          gh release create "$tag" "$deb" "$installer" "$source" \
+            --verify-tag \
+            --target "$head_commit" \
+            --title "Calendar Plus $version" \
+            --notes-file "$notes" \
+            --latest
+
+          expected_assets=$(printf '%s\n%s\n%s\n' \
+            "${deb##*/}" "${installer##*/}" "${source##*/}" | sort)
           published_assets=$(gh release view "$tag" --json assets \
             --jq '.assets[].name' | sort)
           if [[ "$published_assets" != "$expected_assets" ]]; then
@@ -117,7 +113,7 @@ jobs:
           fi
 
           release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}")
-          for asset in "$deb" "$installer"; do
+          for asset in "$deb" "$installer" "$source"; do
             name="${asset##*/}"
             local_size=$(stat -c '%s' "$asset")
             remote_size=$(jq -r --arg name "$name" \
@@ -138,3 +134,6 @@ jobs:
               exit 1
             fi
           done
+
+          published_tag=$(gh release view "$tag" --json tagName --jq .tagName)
+          test "$published_tag" = "$tag"
