@@ -11,22 +11,33 @@ ARCH=amd64
 MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
 DEB="$DIST/calendar-plus_${VERSION}_${ARCH}.deb"
 RUN="$DIST/calendar-plus-${VERSION}-local-folder.run"
+SOURCE="$DIST/Calendar-Plus-${VERSION}-local-source.zip"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 
-for artifact in "$DEB" "$RUN"; do
+for artifact in "$DEB" "$RUN" "$SOURCE"; do
     [ -s "$artifact" ] || {
         echo "Missing release artifact: $artifact" >&2
         exit 1
     }
 done
 
-[ "$(find "$DIST" -maxdepth 1 -type f | wc -l)" -eq 2 ] || {
-    echo "The uploaded release directory must contain exactly two files" >&2
+[ "$(find "$DIST" -maxdepth 1 -type f | wc -l)" -eq 3 ] || {
+    echo "The uploaded release directory must contain exactly three files" >&2
     exit 1
 }
 [ -x "$RUN" ] || {
     echo "Local builder is not executable: $RUN" >&2
+    exit 1
+}
+
+unzip -tq "$SOURCE" >/dev/null
+[ "$(unzip -p "$SOURCE" "Calendar-Plus-${VERSION}/shared/infiltratr-common/VERSION" | tr -d '[:space:]')" = "1.9.0" ] || {
+    echo "Source ZIP does not vendor the pinned Infiltratr Common 1.9.0 tree" >&2
+    exit 1
+}
+[ "$(unzip -p "$SOURCE" "Calendar-Plus-${VERSION}/Makefile" | sed -n 's/^VERSION := //p')" = "$VERSION" ] || {
+    echo "Source ZIP version does not match Calendar Plus $VERSION" >&2
     exit 1
 }
 
@@ -52,7 +63,7 @@ if grep -q -- '-march=native' \
     exit 1
 fi
 RUNTIME_LIB="$TMP/generic/usr/lib/$MULTIARCH/libcalendar-plus.so.0.0.0"
-# Public releases must come from the ordinary monolithic source build.  A
+# Public releases must come from the ordinary monolithic source build. A
 # compatibility-assembled split library can work at runtime while silently
 # weakening the published link-time ABI, so reject that topology outright.
 for private_library in libcalendar-base.so.0 libcpicu.so.0; do
