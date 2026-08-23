@@ -4,7 +4,9 @@
 name: publish-release
 
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["build-and-test"]
+    types: [completed]
 
 permissions:
   contents: read
@@ -15,15 +17,20 @@ concurrency:
 
 jobs:
   publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      startsWith(github.event.workflow_run.head_commit.message, 'Release ')
     permissions:
       contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - name: Check out current main
+      - name: Check out approved main commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: main
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
           submodules: recursive
 
@@ -40,6 +47,7 @@ jobs:
       - name: Validate, build and publish
         env:
           GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
         shell: bash
         run: |
           set -euo pipefail
@@ -47,15 +55,24 @@ jobs:
           git fetch origin main --tags
           head_commit=$(git rev-parse HEAD)
           main_commit=$(git rev-parse origin/main)
-          if [[ "$head_commit" != "$main_commit" ]]; then
-            printf 'Release checkout %s is not current main %s.\n' \
+          if [[ "$head_commit" != "$EXPECTED_SHA" || "$main_commit" != "$EXPECTED_SHA" ]]; then
+            printf 'Release source %s is not exact current main %s.\n' \
               "$head_commit" "$main_commit" >&2
+            exit 1
+          fi
+          release_subject=$(git log -1 --format=%s "$head_commit")
+          if [[ "$release_subject" != Release\ * ]]; then
+            printf 'Current main is not an explicit Release commit.\n' >&2
             exit 1
           fi
 
           version=$(sed -n 's/^VERSION := //p' Makefile)
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             printf 'Invalid source version: %s\n' "$version" >&2
+            exit 1
+          fi
+          if [[ "$release_subject" != "Release ${version}" && "$release_subject" != "Release ${version}:"* ]]; then
+            printf 'Release commit subject must begin with Release %s.\n' "$version" >&2
             exit 1
           fi
           tag="v${version}"
