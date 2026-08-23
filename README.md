@@ -2,180 +2,100 @@
 
 # Calendar Plus
 
-Calendar Plus is a Cinnamon panel clock and calendar for Cinnamon 6.4, 6.6
-and 6.7. The 6.4 compatibility path targets Debian 13; the newer paths cover
-current Linux Mint Cinnamon releases.
-It keeps Cinnamon's panel, popup, settings and CalendarServer integration while
-adding alternative clocks and 22 selectable calendar systems. It has its own
-seconds setting and can coexist with Linux Mint's stock Calendar applet.
+[![Build and test](https://github.com/The-First-Infiltrator/Calendar-Plus/actions/workflows/ci.yml/badge.svg)](https://github.com/The-First-Infiltrator/Calendar-Plus/actions/workflows/ci.yml)
 
-Clock choices include conventional local time, forced 12- or 24-hour time,
-decimal time, Internet Time, Unix time, hexadecimal and binary time, local
-sidereal time, apparent and mean solar time, Julian and Modified Julian Date,
-traditional Chinese double-hours, Roman temporal time and Edo Japanese
-seasonal time. Primary and optional secondary dates include Gregorian, Julian,
-ISO week, Hebrew, three Islamic variants, Persian, Chinese, Indian National,
-Coptic, Ethiopian, Buddhist, Japanese, Minguo, French Republican, Roman, Mayan
-Long Count, Badíʿ, International Fixed, World and Positivist calendars.
+Calendar Plus is a native Cinnamon panel clock and calendar that extends the stock Cinnamon experience with alternative clocks, 22 selectable calendar systems and CalendarServer integration while remaining compatible with Cinnamon's panel, popup and settings model.
+
+**Current version:** 3.9.9  
+**Platforms:** Cinnamon 6.4, 6.6 and 6.7 on supported Debian/Linux Mint bases  
+**Licence:** GPL-3.0-or-later
+
+## Capabilities
+
+Calendar Plus provides conventional local time plus forced 12/24-hour time, decimal time, Internet Time, Unix time, hexadecimal and binary time, sidereal time, apparent and mean solar time, Julian/MJD, traditional Chinese double-hours, Roman temporal time and Edo Japanese seasonal time.
+
+Primary and optional secondary dates include Gregorian, Julian, ISO week, Hebrew, three Islamic variants, Persian, Chinese, Indian National, Coptic, Ethiopian, Buddhist, Japanese, Minguo, French Republican, Roman, Mayan Long Count, Badíʿ, International Fixed, World and Positivist calendars.
+
+The applet has its own seconds setting, can coexist with Linux Mint's stock Calendar applet and installs no project-owned daemon, polling service or autostart entry.
 
 ## Architecture
 
-Calendar Plus has three deliberate layers:
+Calendar Plus is deliberately split into three layers:
 
-- `shared/infiltratr-common` is a Git submodule pinned to the GPL-3.0-or-later
-  C11 foundation in the [Infiltrator Libraries](https://github.com/The-First-Infiltrator/Infiltrator-Libraries)
-  repository. Calendar Plus 3.9.9 compiles Common's dependency-free
-  `core.c`, `arithmetic.c` and `timing.c`, plus the thin cross-platform
-  `dynlib.c` adapter: project identity, strict parsing, string helpers,
-  clamping, negative-safe arithmetic, exact discrete/continuous phase-aligned
-  timer policy and runtime library loading. Calendar-specific code does not
-  carry Common's formatting or POSIX file/path providers.
-- The C core owns calendar arithmetic, alternative-clock calculations,
-  boundary scheduling, the 42-cell grid and event interval semantics. Its
-  records and callback interfaces do not depend on GObject, GVariant, GJS or a
-  GUI main loop. GLib base facilities remain a portable dependency. ICU is
-  used through a small runtime-loaded C adapter so the generic package is not
-  tied to one ICU SONAME; current release packaging accepts ICU 74
-  (Ubuntu 24.04/Mint 22), ICU 76 (Debian 13) or ICU 78.
-- Native adapters provide GObject Introspection, GVariant tuple conversion and
-  the GLib timer used by Cinnamon. JavaScript owns Cinnamon actors, settings,
-  translations, CalendarServer transport and applet lifecycle.
+- `shared/infiltratr-common` is the pinned Infiltratr Common dependency for reusable parsing, arithmetic, timing and dynamic-library mechanics.
+- The portable C core owns calendar arithmetic, alternative-clock calculations, boundary scheduling, event interval semantics and the 42-cell calendar grid.
+- Native adapters provide GObject Introspection, GVariant conversion and GLib timer integration; JavaScript owns Cinnamon actors, settings, translations, CalendarServer transport and applet lifecycle.
 
-Calendar and clock implementations are registered through versioned internal
-provider tables. Provider metadata generates the matching settings choices, so
-the C registry is the single source of truth. The provider ABI is internal;
-third-party binary module loading is not part of this release.
+Calendar and clock implementations are registered through internal provider tables. Those tables are the source of truth for both runtime behaviour and settings choices. The JavaScript applet verifies the loaded native-library version before creating its popup.
 
-The JavaScript applet checks the loaded native library version before creating
-the popup. The only helper executable is the on-demand GTK 3 About dialog.
-Calendar Plus installs no daemon, polling service or autostart entry.
+Application-specific calendar rules, astronomy, ICU symbol policy and Cinnamon integration remain in Calendar Plus rather than moving into Common.
 
-## Release downloads
+## Build and test
 
-Each release is intended to be simple for end users:
+On Debian 13, Linux Mint 22 or Ubuntu 24.04:
+
+```bash
+sudo apt install build-essential clang debhelper gettext gobject-introspection gjs \
+    gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs pkg-config \
+    python3 ripgrep shellcheck zip git
+
+git clone --recurse-submodules https://github.com/The-First-Infiltrator/Calendar-Plus.git
+cd Calendar-Plus
+make check
+```
+
+Useful verification targets include:
+
+```bash
+make check
+make sanitize
+make coverage
+make static-analysis
+make reproducible-build
+make release-check
+```
+
+`make check` covers the C core, clock/calendar reference anchors, boundary behaviour, JavaScript lifecycle/syntax, GJS/typelib compatibility, exported symbols, translations, generated settings, source integrity and architecture boundaries. `make release-check` validates the complete release artifact set.
+
+## Install and release assets
+
+A numbered GitHub release publishes these project-owned artifacts:
 
 | File | Purpose |
 | --- | --- |
-| `calendar-plus_<version>_amd64.deb` | Generic amd64 package built with conservative `-O2` optimisation. |
-| `calendar-plus-<version>-local-folder.run` | Verifies its embedded source, builds with `-O3 -march=native -mtune=native -flto=auto`, creates a `+native1` Debian package and installs it through APT. |
-| `Calendar-Plus-<version>-local-source.zip` | Deterministic tested source archive containing Calendar Plus and the exact pinned Infiltratr Common source. |
+| `calendar-plus_<version>_amd64.deb` | Generic amd64 Debian package. |
+| `calendar-plus-<version>-local-folder.run` | Verified local native build/install program. |
+| `Calendar-Plus-<version>-local-source.zip` | Tested source archive containing Calendar Plus and the exact pinned Common source. |
 
-The explicit source ZIP is the project's tested source deliverable and is
-published with the `.deb` and `.run`. GitHub's automatic `Source code (zip)`
-and `Source code (tar.gz)` links remain available as convenience snapshots, but
-they contain only the submodule reference. When one of those automatic archives
-is used, normal `make` automatically retrieves the exact pinned Infiltratr Common
-commit into `shared/infiltratr-common` if it is not already present.
-
-The local `.run` builder already carries the required Calendar Plus and shared
-source trees in its verified payload. The generic package never uses
-host-specific CPU flags. Both installation paths produce normal Debian packages
-managed by APT. The generic amd64 package intentionally avoids a direct ELF
-dependency on a single ICU major so one package can span the supported Debian
-and Mint/Ubuntu bases.
-
-## Install
-
-Generic package:
+Install the generic package with:
 
 ```bash
 sudo apt install ./calendar-plus_<version>_amd64.deb
 ```
 
-Hardware-native build:
+Or use the native builder:
 
 ```bash
 chmod +x calendar-plus-<version>-local-folder.run
 ./calendar-plus-<version>-local-folder.run
 ```
 
-The native builder installs missing build dependencies and leaves its generated
-`.deb` in the launch directory. `--build-only` builds without installing;
-`--verify-only` checks the embedded source payload. After either installation,
-add **Calendar Plus** in **System Settings -> Applets**.
+After installation, add **Calendar Plus** from **System Settings → Applets**.
 
-## Build and verify
+## Repository and release policy
 
-On Debian 13, Linux Mint 22 or Ubuntu 24.04:
+This repository uses `main` as its working branch. Development changes are made directly on `main`; the normal project workflow does not depend on PR, feature or release branches.
 
-```bash
-sudo apt install build-essential clang-tidy debhelper gettext gcovr lintian \
-    gir1.2-glib-2.0-dev \
-    gobject-introspection gjs libglib2.0-dev libicu-dev nodejs pkg-config \
-    python3 ripgrep shellcheck zip git
-git clone --recurse-submodules https://github.com/The-First-Infiltrator/Calendar-Plus.git
-cd Calendar-Plus
-make check
-sudo make install
-```
+Every push to `main` runs CI. Ordinary commits do not publish a release. A commit is release-eligible only when its subject begins with the exact source version in the form `Release <version>` (optionally followed by a colon and description) and the complete `main` CI run succeeds.
 
-Git clones and GitHub's automatic source archives use the same pinned shared
-source commit. If the shared tree is absent, the normal build retrieves that
-exact commit automatically; no manual submodule step is required.
+The publisher then re-checks that the tested commit is still the exact current `main`, reruns the release gates, builds the `.deb`, `.run` and deterministic source ZIP, creates the version tag and publishes the release. Existing version tags and published releases are immutable and are never moved, replaced or edited in place.
 
-`make check` covers C reference/property tests, exact discrete-clock boundaries,
-the complete Calendar civil-year domain, the adapter-free core, JavaScript
-lifecycle and syntax, GJS/typelib compatibility, exported symbols, immutable
-ABI history, translations, generated settings, source integrity, architecture
-boundaries and builds from paths containing spaces. Calendar reference anchors
-cover every registered provider. Additional gates are `make sanitize`,
-`make coverage`, `make static-analysis`, `make reproducible-build` and
-`make release-check`; the release gate builds and validates the generic `.deb`,
-the native `.run`, and the deterministic source ZIP in `dist/`.
-
-On an installed Cinnamon session, `tools/cinnamon-smoke.sh` checks installed
-runtime hashes, metadata, About helper, native library/typelib compatibility
-and every registered clock/calendar provider. Panel reload, popup use, every
-clock/calendar mode, suspend/resume, removal/re-add and reboot still require an
-interactive smoke test.
-
-## Maintenance rules
-
-- Keep GObject, GVariant, GJS and toolkit assumptions out of `calendar-core`,
-  `clock-engine`, `event-core` and `event-source`.
-- Update the `shared/infiltratr-common` submodule only to a reviewed, tested
-  Infiltratr Libraries release commit. Never edit a private application copy.
-- Infiltratr Common 1.9 owns the generic parsing/string/numeric primitives,
-  exact discrete and continuous phase-aligned timing policy and cross-platform
-  runtime-loader mechanics used here. Calendar systems, astronomy, event
-  semantics, ICU symbol policy and timer/main-loop adapters remain Calendar Plus
-  code.
-- Add built-in calendars and clocks through their provider tables, then run
-  `make update-settings`.
-- After runtime JavaScript or JSON changes, run `make update-runtime-hashes`.
-  After translatable text changes, run `make update-pot` and update the language
-  catalogue.
-- Comments record ownership, units, invariants, algorithm choices, platform
-  boundaries and non-obvious failure behaviour. They must not narrate syntax,
-  preserve obsolete implementation history or promise behaviour the code does
-  not enforce.
-- Existing entries in `tests/abi-baseline.txt` are historical ABI records and
-  are not changed by routine releases; new API may add entries and version nodes.
-- A release updates the Makefile version, `metadata.json`, `SOURCE_DATE_EPOCH`
-  and the top Debian changelog entry. Ordinary pushes and tags never publish.
-  The explicit **publish-release** workflow validates current `main`, creates the
-  immutable version tag itself, and publishes the `.deb`, `.run`, and tested
-  source ZIP as one release.
+Manually runnable build/test workflows, where present, are diagnostic helpers only and are not release-approval mechanisms.
 
 ## Model limits
 
-Historical calendars and clocks are computational models. Islamic results are
-not local crescent observations; the Badíʿ implementation uses a civil-midnight
-Persian year boundary; the French Republican continuation uses a defined
-arithmetic rule. Apparent/seasonal solar calculations use the compact NOAA
-fractional-year approximation. Roman temporal time divides sunrise-to-sunset
-into 12 unequal seasonal hours and the night into four watches. Edo Japanese
-time divides daylight and night into six toki each and uses the Kansei-calendar
-dawn/dusk altitude. Traditional Chinese time exposes the 12 Earthly-Branch
-double-hours rather than inventing a modern finer subdivision. At polar
-latitudes where the requested solar boundary does not occur, seasonal clocks
-display N/A. Japanese era calendar output follows the installed ICU data.
+Historical calendars and clocks are computational models. Islamic results are not local crescent observations; solar/seasonal clocks use defined astronomical approximations and can return N/A at polar latitudes where a requested solar boundary does not occur. Japanese era output follows the installed ICU data.
 
-## Provenance and licence
+## Licence
 
-The current runtime is independently implemented against Cinnamon's public
-interfaces. Releases through 3.3.0 retained the notices required by their
-Cinnamon-derived files; current provenance details are in `debian/copyright`.
-
-Calendar Plus is GPL-3.0-or-later. The pinned Infiltratr Common dependency uses
-the same licence. See `COPYING` and the dependency's `LICENSE`.
+Calendar Plus is free software licensed under the GNU General Public License version 3 or, at your option, any later version (`GPL-3.0-or-later`). The pinned Infiltratr Common dependency uses the same licence. Provenance and retained third-party notices are recorded in `debian/copyright` and the repository licence files.
