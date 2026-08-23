@@ -1,3 +1,12 @@
+calendar-plus (3.9.10) trixie; urgency=medium
+
+  * Pin the shared C foundation to Infiltratr Common 1.11.0.
+  * Build and link Common through its authoritative public static-library build
+    product instead of enumerating or compiling Common's private source files.
+  * Update release and source-archive validation for the Common 1.11 boundary.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Sun, 23 Aug 2026 19:30:00 +1000
+
 calendar-plus (3.9.9) trixie; urgency=medium
 
   * Move discrete clock partitioning and exact next-boundary timing into
