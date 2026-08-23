@@ -46,9 +46,9 @@ def main() -> None:
     assert "shared/infiltratr-common" in makefile
     assert (
         "INFILTRATR_COMMON_COMMIT := "
-        "a65b279b40682791f2cfefb4d9bdc274790b0c77"
+        "6c1a6c239e51dcf7946b6303a9bad639e8455a17"
     ) in makefile
-    assert "INFILTRATR_COMMON_VERSION := 1.9.0" in makefile
+    assert "INFILTRATR_COMMON_VERSION := 1.11.0" in makefile
     assert "normal `make` automatically retrieves" in read("README.md")
     assert "common-bootstrap: common-check" in makefile
     assert "git -C \"$(INFILTRATR_COMMON_DIR)\" fetch -q --depth 1 origin" in makefile
@@ -64,14 +64,19 @@ def main() -> None:
     assert "validate-abi" in rules
     assert "validate-runtime-deps" in rules
 
-    common_sources = makefile.split("INFILTRATR_COMMON_SOURCES :=", 1)[1].split(
-        "INFILTRATR_COMMON_HEADERS :=", 1
-    )[0]
-    assert "$(INFILTRATR_COMMON_DIR)/src/core.c" in common_sources
-    assert "$(INFILTRATR_COMMON_DIR)/src/arithmetic.c" in common_sources
-    assert "$(INFILTRATR_COMMON_DIR)/src/timing.c" in common_sources
-    assert "$(INFILTRATR_COMMON_DIR)/src/dynlib.c" in common_sources
-    assert "$(INFILTRATR_COMMON_DIR)/src/format.c" not in common_sources
+    # Common is an independently versioned library. Calendar may include its
+    # public headers and link its public archive, but must never encode Common's
+    # private source-file membership in this repository.
+    assert "INFILTRATR_COMMON_SOURCES :=" not in makefile
+    assert "INFILTRATR_COMMON_OBJECTS :=" not in makefile
+    assert "$(BUILD_DIR)/infiltratr-%.o" not in makefile
+    assert "$(INFILTRATR_COMMON_DIR)/src/core.c" not in makefile
+    assert "$(INFILTRATR_COMMON_DIR)/src/arithmetic.c" not in makefile
+    assert "$(INFILTRATR_COMMON_DIR)/src/timing.c" not in makefile
+    assert "$(INFILTRATR_COMMON_DIR)/src/dynlib.c" not in makefile
+    assert "INFILTRATR_COMMON_BUILD_DIR :=" in makefile
+    assert '$(MAKE) -C "$(INFILTRATR_COMMON_DIR)"' in makefile
+    assert 'BUILD_DIR="$(INFILTRATR_COMMON_BUILD_DIR)"' in makefile
 
     assert 'NATIVE_VERSION="${VERSION}+native${NATIVE_REVISION}"' in installer
     assert "CALENDAR_PLUS_BUILD_MODE=native" in installer
@@ -161,7 +166,7 @@ def main() -> None:
     assert "clang-analyzer-*" in makefile
     assert (ROOT / "tests/abi-baseline.txt").is_file()
     shared = ROOT / "shared/infiltratr-common"
-    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.9.0"
+    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.11.0"
     assert (shared / "LICENSE").is_file()
     assert (shared / "include/infiltratr/core.h").is_file()
     assert (shared / "include/infiltratr/arithmetic.h").is_file()

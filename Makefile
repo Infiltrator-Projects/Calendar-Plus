@@ -15,8 +15,8 @@ BUILD_DIR := build
 DIST_DIR := dist
 INFILTRATR_COMMON_DIR := shared/infiltratr-common
 INFILTRATR_COMMON_URL := https://github.com/The-First-Infiltrator/Infiltrator-Libraries.git
-INFILTRATR_COMMON_COMMIT := a65b279b40682791f2cfefb4d9bdc274790b0c77
-INFILTRATR_COMMON_VERSION := 1.9.0
+INFILTRATR_COMMON_COMMIT := 6c1a6c239e51dcf7946b6303a9bad639e8455a17
+INFILTRATR_COMMON_VERSION := 1.11.0
 LIB_BASENAME := calendar-plus
 LIB_SONAME := lib$(LIB_BASENAME).so.0
 LIB_REALNAME := lib$(LIB_BASENAME).so.0.0.0
@@ -78,22 +78,17 @@ PRIVATE_HEADERS := \
 	src/calendar-system-private.h \
 	src/event-store-private.h
 HEADERS := $(sort $(PUBLIC_HEADERS) $(CORE_HEADERS) $(PRIVATE_HEADERS))
-# Calendar Plus consumes Common's dependency-free core/arithmetic/timing
-# plus the thin POSIX/Win32 dynamic-library adapter.
-INFILTRATR_COMMON_SOURCES := \
-	$(INFILTRATR_COMMON_DIR)/src/core.c \
-	$(INFILTRATR_COMMON_DIR)/src/arithmetic.c \
-	$(INFILTRATR_COMMON_DIR)/src/timing.c \
-	$(INFILTRATR_COMMON_DIR)/src/dynlib.c
+# Common is consumed through its own public static-library build product.
+# Calendar Plus deliberately does not enumerate or compile Common's private
+# source-file membership.
 INFILTRATR_COMMON_HEADERS := \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/compiler.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/core.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/arithmetic.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/timing.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/dynlib.h
-INFILTRATR_COMMON_OBJECTS := \
-	$(patsubst $(INFILTRATR_COMMON_DIR)/src/%.c,$(BUILD_DIR)/infiltratr-%.o,$(INFILTRATR_COMMON_SOURCES))
-INFILTRATR_COMMON_ARCHIVE := $(BUILD_DIR)/libinfiltratr-common.a
+INFILTRATR_COMMON_BUILD_DIR := $(abspath $(BUILD_DIR))/infiltratr-common
+INFILTRATR_COMMON_ARCHIVE := $(INFILTRATR_COMMON_BUILD_DIR)/libinfiltratr-common.a
 OBJECTS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SOURCES))
 CORE_OBJECTS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(CORE_SOURCES))
 CORE_ARCHIVE := $(BUILD_DIR)/libcalendar-plus-core.a
@@ -232,22 +227,19 @@ check-deps: common-check
 	@command -v gjs >/dev/null || { \
 		echo "Missing test dependency: gjs" >&2; exit 1; }
 
-$(INFILTRATR_COMMON_SOURCES) $(INFILTRATR_COMMON_HEADERS): | common-check
-	@test -f "$@" || { echo "Unable to materialize pinned Infiltratr Common source file: $@" >&2; exit 1; }
+$(INFILTRATR_COMMON_HEADERS): | common-check
+	@test -f "$@" || { echo "Unable to materialize pinned Infiltratr Common public header: $@" >&2; exit 1; }
 
 $(BUILD_DIR)/%.o: src/%.c $(HEADERS)
 	@mkdir -p "$(BUILD_DIR)"
 	$(CC) $(CPPFLAGS) $(CFLAGS) -frandom-seed=$(REPRO_SEED_PREFIX)-$(notdir $<) $(GLIB_CFLAGS) -MMD -MP -c $< -o $@
 
-$(BUILD_DIR)/infiltratr-%.o: $(INFILTRATR_COMMON_DIR)/src/%.c \
-		$(INFILTRATR_COMMON_HEADERS)
-	@mkdir -p "$(BUILD_DIR)"
-	$(CC) $(CPPFLAGS) $(CFLAGS) \
-		-frandom-seed=$(REPRO_SEED_PREFIX)-infiltratr-$* -MMD -MP -c $< -o $@
-
-$(INFILTRATR_COMMON_ARCHIVE): $(INFILTRATR_COMMON_OBJECTS) | common-check
-	@rm -f "$@"
-	$(AR) rcsD "$@" $(INFILTRATR_COMMON_OBJECTS)
+$(INFILTRATR_COMMON_ARCHIVE): $(INFILTRATR_COMMON_HEADERS) | common-check
+	$(MAKE) -C "$(INFILTRATR_COMMON_DIR)" \
+		CC="$(CC)" AR="$(AR)" \
+		BUILD_DIR="$(INFILTRATR_COMMON_BUILD_DIR)" \
+		CFLAGS="$(CFLAGS)" all
+	@test -f "$@" || { echo "Infiltratr Common did not produce $@" >&2; exit 1; }
 
 $(CORE_ARCHIVE): $(CORE_OBJECTS)
 	@rm -f "$@"

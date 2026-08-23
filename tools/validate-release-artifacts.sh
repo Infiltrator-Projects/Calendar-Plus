@@ -32,8 +32,8 @@ done
 }
 
 unzip -tq "$SOURCE" >/dev/null
-[ "$(unzip -p "$SOURCE" "Calendar-Plus-${VERSION}/shared/infiltratr-common/VERSION" | tr -d '[:space:]')" = "1.9.0" ] || {
-    echo "Source ZIP does not vendor the pinned Infiltratr Common 1.9.0 tree" >&2
+[ "$(unzip -p "$SOURCE" "Calendar-Plus-${VERSION}/shared/infiltratr-common/VERSION" | tr -d '[:space:]')" = "1.11.0" ] || {
+    echo "Source ZIP does not vendor the pinned Infiltratr Common 1.11.0 tree" >&2
     exit 1
 }
 [ "$(unzip -p "$SOURCE" "Calendar-Plus-${VERSION}/Makefile" | sed -n 's/^VERSION := //p')" = "$VERSION" ] || {
