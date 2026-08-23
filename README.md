@@ -57,7 +57,7 @@ make release-check
 
 `make check` covers the C core, clock/calendar reference anchors, boundary behaviour, JavaScript lifecycle/syntax, GJS/typelib compatibility, exported symbols, translations, generated settings, source integrity and architecture boundaries. `make release-check` validates the complete release artifact set.
 
-## Install and release assets
+## Release assets
 
 A numbered GitHub release publishes these project-owned artifacts:
 
@@ -66,6 +66,8 @@ A numbered GitHub release publishes these project-owned artifacts:
 | `calendar-plus_<version>_amd64.deb` | Generic amd64 Debian package. |
 | `calendar-plus-<version>-local-folder.run` | Verified local native build/install program. |
 | `Calendar-Plus-<version>-local-source.zip` | Tested source archive containing Calendar Plus and the exact pinned Common source. |
+
+### Install
 
 Install the generic package with:
 
