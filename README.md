@@ -64,8 +64,8 @@ The explicit source ZIP is the project's tested source deliverable and is
 published with the `.deb` and `.run`. GitHub's automatic `Source code (zip)`
 and `Source code (tar.gz)` links remain available as convenience snapshots, but
 they contain only the submodule reference. When one of those automatic archives
-is used, a normal `make` retrieves the exact pinned Infiltratr Common commit into
-`shared/infiltratr-common` if it is not already present.
+is used, normal `make` automatically retrieves the exact pinned Infiltratr Common
+commit into `shared/infiltratr-common` if it is not already present.
 
 The local `.run` builder already carries the required Calendar Plus and shared
 source trees in its verified payload. The generic package never uses
