@@ -16,6 +16,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release-policy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Enforce explicit immutable release approval
+        shell: bash
+        run: |
+          set -euo pipefail
+          release=.github/workflows/release.yml
+          grep -qx '  workflow_dispatch:' "$release"
+          if grep -Eq '^  (push|pull_request|workflow_run|schedule):' "$release"; then
+            echo 'Calendar Plus release publication must be manual-only.' >&2
+            exit 1
+          fi
+          grep -Fq 'ref: main' "$release"
+          grep -Fq 'published releases are immutable' "$release"
+          grep -Fq 'Calendar-Plus-${version}-local-source.zip' "$release"
+
   native:
     runs-on: ubuntu-24.04
     strategy:
@@ -94,6 +112,6 @@ jobs:
             build-essential debhelper devscripts gettext gobject-introspection gjs \
             gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
             pkg-config python3 ripgrep \
-            lintian shellcheck zip
+            lintian shellcheck unzip zip
       - name: Run complete release gates
         run: make release-check
