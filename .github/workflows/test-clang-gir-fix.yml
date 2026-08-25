@@ -2,13 +2,13 @@
 # Copyright (C) 2026 Shannon Smith
 
 name: test-clang-gir-fix
-# PR verification only; removed before the release merge.
-# Re-triggered after the workflow became present on the protected base branch.
 
 on:
-  pull_request:
-    branches: [main]
-    paths: [.github/workflows/test-clang-gir-fix.yml]
+  push:
+    branches:
+      - fix/calendar-plus-3.9.10-clang-gir-v2
+    paths:
+      - .github/workflows/test-clang-gir-fix.yml
 
 permissions:
   contents: write
@@ -21,7 +21,7 @@ jobs:
       - name: Check out fix branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.head_ref }}
+          ref: fix/calendar-plus-3.9.10-clang-gir-v2
           fetch-depth: 0
           submodules: recursive
 
@@ -35,7 +35,7 @@ jobs:
             gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
             pkg-config python3 ripgrep lintian shellcheck unzip zip
 
-      - name: Isolate g-ir-scanner from project warning flags
+      - name: Apply GIR scanner isolation fix
         shell: bash
         run: |
           set -euo pipefail
@@ -43,17 +43,10 @@ jobs:
           from pathlib import Path
           path = Path('Makefile')
           text = path.read_text(encoding='utf-8')
-          old = '''\tLD_LIBRARY_PATH="$(abspath $(BUILD_DIR))$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}" \\
-\tTMPDIR="$(abspath $(BUILD_DIR)/tmp)" \\
-\t$(G_IR_SCANNER) \\
-'''
-          new = '''\tLD_LIBRARY_PATH="$(abspath $(BUILD_DIR))$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}" \\
-\tTMPDIR="$(abspath $(BUILD_DIR)/tmp)" \\
-\tCFLAGS= \\
-\t$(G_IR_SCANNER) \\
-'''
+          old = '\tTMPDIR="$(abspath $(BUILD_DIR)/tmp)" \\\n\t$(G_IR_SCANNER) \\\n'
+          new = '\tTMPDIR="$(abspath $(BUILD_DIR)/tmp)" \\\n\tCFLAGS= \\\n\t$(G_IR_SCANNER) \\\n'
           if text.count(old) != 1:
-              raise SystemExit(f'expected one GIR scanner environment block, found {text.count(old)}')
+              raise SystemExit(f'expected one GIR scanner block, found {text.count(old)}')
           path.write_text(text.replace(old, new), encoding='utf-8')
           PY
           git diff --check
@@ -76,14 +69,15 @@ jobs:
           make clean
           make release-check
 
-      - name: Commit exact tested Makefile fix
+      - name: Commit exact tested fix and remove helper
         shell: bash
         run: |
           set -euo pipefail
+          rm -f .github/workflows/test-clang-gir-fix.yml
           git config user.name 'The-First-Infiltrator'
           git config user.email 'infiltratr@yandex.com'
-          git add Makefile
+          git add -A
           git diff --cached --check
-          git diff --cached --quiet && { echo 'No Makefile fix to commit.' >&2; exit 1; }
+          git diff --cached --quiet && { echo 'No tested fix to commit.' >&2; exit 1; }
           git commit -m 'Fix Clang GIR scanner warning isolation'
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin HEAD:fix/calendar-plus-3.9.10-clang-gir-v2
