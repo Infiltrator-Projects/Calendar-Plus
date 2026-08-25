@@ -482,6 +482,7 @@ coverage:
 	@command -v gcovr >/dev/null || { \
 		echo "gcovr is required for the coverage gate" >&2; exit 1; }
 	gcovr --root . --filter src --exclude 'src/about-dialog.c' \
+		--gcov-exclude-directories '.*/build/infiltratr-common$$' \
 		--print-summary --fail-under-line $(COVERAGE_MIN_LINES) \
 		--html-details -o "$(BUILD_DIR)/coverage.html"
 
