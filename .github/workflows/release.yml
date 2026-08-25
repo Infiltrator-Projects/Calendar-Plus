@@ -3,6 +3,8 @@
 
 name: publish-release
 
+# Publication is gated by the successful main-branch CI run for an explicit
+# Release commit, so no untested tree can become a GitHub release.
 on:
   workflow_run:
     workflows: ["build-and-test"]
