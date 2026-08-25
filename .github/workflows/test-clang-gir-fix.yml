@@ -3,6 +3,7 @@
 
 name: test-clang-gir-fix
 # PR verification only; removed before the release merge.
+# Re-triggered after the workflow became present on the protected base branch.
 
 on:
   pull_request:
