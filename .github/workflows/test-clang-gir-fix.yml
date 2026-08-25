@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+name: test-clang-gir-fix
+
+on:
+  pull_request:
+    branches: [main]
+    paths: [.github/workflows/test-clang-gir-fix.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Check out fix branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install complete test dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential clang debhelper devscripts gettext gobject-introspection gjs \
+            gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
+            pkg-config python3 ripgrep lintian shellcheck unzip zip
+
+      - name: Isolate g-ir-scanner from project warning flags
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('Makefile')
+          text = path.read_text(encoding='utf-8')
+          old = '''\tLD_LIBRARY_PATH="$(abspath $(BUILD_DIR))$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}" \\
+\tTMPDIR="$(abspath $(BUILD_DIR)/tmp)" \\
+\t$(G_IR_SCANNER) \\
+'''
+          new = '''\tLD_LIBRARY_PATH="$(abspath $(BUILD_DIR))$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}" \\
+\tTMPDIR="$(abspath $(BUILD_DIR)/tmp)" \\
+\tCFLAGS= \\
+\t$(G_IR_SCANNER) \\
+'''
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one GIR scanner environment block, found {text.count(old)}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+          git diff --check
+
+      - name: Verify GCC build and tests
+        run: |
+          set -euo pipefail
+          make clean
+          CC=gcc make check
+
+      - name: Verify Clang build and tests
+        run: |
+          set -euo pipefail
+          make clean
+          CC=clang make check
+
+      - name: Verify complete release gate
+        run: |
+          set -euo pipefail
+          make clean
+          make release-check
+
+      - name: Commit exact tested Makefile fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'The-First-Infiltrator'
+          git config user.email 'infiltratr@yandex.com'
+          git add Makefile
+          git diff --cached --check
+          git diff --cached --quiet && { echo 'No Makefile fix to commit.' >&2; exit 1; }
+          git commit -m 'Fix Clang GIR scanner warning isolation'
+          git push origin HEAD:${{ github.head_ref }}
