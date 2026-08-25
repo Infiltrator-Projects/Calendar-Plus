@@ -4,7 +4,7 @@
 name: adopt-common-1.14
 
 on:
-  push:
+  pull_request:
     branches: [main]
     paths: [.github/workflows/adopt-common-1.14.yml]
 
@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - name: Check out current main
+      - name: Check out release branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: main
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
           submodules: recursive
 
@@ -86,15 +86,19 @@ jobs:
           make clean
           make release-check
 
-      - name: Commit exact tested release candidate and remove helper
+      - name: Commit exact tested non-workflow candidate
         shell: bash
         run: |
           set -euo pipefail
-          rm -f .github/workflows/adopt-common-1.14.yml
           git config user.name 'The-First-Infiltrator'
           git config user.email 'infiltratr@yandex.com'
-          git add -A
+          git add \
+            Makefile \
+            tests/test-release-model.py \
+            tools/validate-release-artifacts.sh \
+            debian/changelog \
+            shared/infiltratr-common
           git diff --cached --check
           git diff --cached --quiet && { echo 'No release changes to commit.' >&2; exit 1; }
-          git commit -m 'Release 3.9.10: pin Infiltratr Common 1.14.0'
-          git push origin HEAD:main
+          git commit -m 'Adopt tested Infiltratr Common 1.14.0 candidate'
+          git push origin HEAD:${{ github.head_ref }}
