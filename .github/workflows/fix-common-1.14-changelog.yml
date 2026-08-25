@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+name: fix-common-1.14-changelog
+
+on:
+  pull_request:
+    branches: [main]
+    paths: [.github/workflows/fix-common-1.14-changelog.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Correct Common boundary wording
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('debian/changelog')
+          text = path.read_text(encoding='utf-8')
+          old = 'Common 1.11 boundary'
+          new = 'Common 1.14 boundary'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one stale boundary reference, found {text.count(old)}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+          git config user.name 'The-First-Infiltrator'
+          git config user.email 'infiltratr@yandex.com'
+          git add debian/changelog
+          git diff --cached --check
+          git commit -m 'Correct Calendar Common 1.14 release wording'
+          git push origin HEAD:${{ github.head_ref }}
