@@ -87,8 +87,11 @@ INFILTRATR_COMMON_HEADERS := \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/arithmetic.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/timing.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/dynlib.h
-INFILTRATR_COMMON_BUILD_DIR := $(abspath $(BUILD_DIR))/infiltratr-common
-INFILTRATR_COMMON_ARCHIVE := $(INFILTRATR_COMMON_BUILD_DIR)/libinfiltratr-common.a
+# The Common sub-make runs from shared/infiltratr-common. Keep its BUILD_DIR
+# textual value relative and whitespace-free so GNU make never has to parse the
+# checkout's absolute path as a target name.
+INFILTRATR_COMMON_BUILD_DIR := ../../$(BUILD_DIR)/infiltratr-common
+INFILTRATR_COMMON_ARCHIVE := $(BUILD_DIR)/infiltratr-common/libinfiltratr-common.a
 OBJECTS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SOURCES))
 CORE_OBJECTS := $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(CORE_SOURCES))
 CORE_ARCHIVE := $(BUILD_DIR)/libcalendar-plus-core.a
@@ -123,6 +126,11 @@ BUILD_DESCRIPTION := local hardware-native (-O3 -march=native -mtune=native -flt
 else
 $(error Unsupported BUILD_MODE '$(BUILD_MODE)'; use generic or native)
 endif
+
+# Export the fully composed flags to recursive make without re-serialising them
+# through nested shell quotes. This preserves prefix-map arguments when the
+# Calendar Plus checkout path itself contains whitespace.
+export CFLAGS
 
 REPRO_SEED_PREFIX ?= calendar-plus-$(VERSION)
 LDFLAGS += -Wl,-z,relro,-z,now -Wl,--as-needed
@@ -237,8 +245,7 @@ $(BUILD_DIR)/%.o: src/%.c $(HEADERS)
 $(INFILTRATR_COMMON_ARCHIVE): $(INFILTRATR_COMMON_HEADERS) | common-check
 	$(MAKE) -C "$(INFILTRATR_COMMON_DIR)" \
 		CC="$(CC)" AR="$(AR)" \
-		BUILD_DIR="$(INFILTRATR_COMMON_BUILD_DIR)" \
-		CFLAGS="$(CFLAGS)" all
+		BUILD_DIR="$(INFILTRATR_COMMON_BUILD_DIR)" all
 	@test -f "$@" || { echo "Infiltratr Common did not produce $@" >&2; exit 1; }
 
 $(CORE_ARCHIVE): $(CORE_OBJECTS)
