@@ -6,7 +6,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Calendar Plus 3.9.9\n"
+"Project-Id-Version: Calendar Plus 3.9.10\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-18 11:12+0000\n"
 "PO-Revision-Date: 2026-08-18 11:12+0000\n"
