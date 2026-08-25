@@ -98,7 +98,7 @@ jobs:
           test -x "$installer"
           test -f "$source"
           unzip -tq "$source"
-          test "$(unzip -p "$source" "Calendar-Plus-${version}/shared/infiltratr-common/VERSION" | tr -d '[:space:]')" = "1.11.0"
+          test "$(unzip -p "$source" "Calendar-Plus-${version}/shared/infiltratr-common/VERSION" | tr -d '[:space:]')" = "1.14.0"
 
           notes="${RUNNER_TEMP}/release-notes.md"
           awk '
