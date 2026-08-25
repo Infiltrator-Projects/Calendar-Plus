@@ -46,9 +46,9 @@ def main() -> None:
     assert "shared/infiltratr-common" in makefile
     assert (
         "INFILTRATR_COMMON_COMMIT := "
-        "6c1a6c239e51dcf7946b6303a9bad639e8455a17"
+        "744baa063a8cc29e4fd065899bb9c2b12ec97c92"
     ) in makefile
-    assert "INFILTRATR_COMMON_VERSION := 1.11.0" in makefile
+    assert "INFILTRATR_COMMON_VERSION := 1.14.0" in makefile
     assert "normal `make` automatically retrieves" in read("README.md")
     assert "common-bootstrap: common-check" in makefile
     assert "git -C \"$(INFILTRATR_COMMON_DIR)\" fetch -q --depth 1 origin" in makefile
@@ -166,7 +166,7 @@ def main() -> None:
     assert "clang-analyzer-*" in makefile
     assert (ROOT / "tests/abi-baseline.txt").is_file()
     shared = ROOT / "shared/infiltratr-common"
-    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.11.0"
+    assert (shared / "VERSION").read_text(encoding="utf-8").strip() == "1.14.0"
     assert (shared / "LICENSE").is_file()
     assert (shared / "include/infiltratr/core.h").is_file()
     assert (shared / "include/infiltratr/arithmetic.h").is_file()
