@@ -48,11 +48,8 @@ variant_dup_string_limited(GVariant *value,
         return NULL;
 
     text = g_variant_get_string(value, &length);
-    if (length > maximum_bytes || (!allow_empty && length == 0) ||
-        !g_utf8_validate(text, (gssize)length, NULL))
-    {
+    if (length > maximum_bytes || (!allow_empty && length == 0))
         return NULL;
-    }
     return g_strndup(text, length);
 }
 
