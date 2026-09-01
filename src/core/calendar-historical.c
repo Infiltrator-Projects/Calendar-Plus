@@ -405,7 +405,8 @@ calendar_plus_armenian_fields_from_jdn(
 {
     const gint64 elapsed = calendar_plus_i64_subtract_saturating(
         jdn, ARMENIAN_EPOCH_JDN);
-    const gint64 year = calendar_plus_i64_add_saturating(\n        floor_divide(elapsed, 365), 1);
+    const gint64 year = calendar_plus_i64_add_saturating(
+        floor_divide(elapsed, 365), 1);
     const gint day_of_year = (gint)positive_modulo(elapsed, 365);
 
     g_return_if_fail(fields != NULL);
