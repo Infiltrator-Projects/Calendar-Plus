@@ -13,6 +13,8 @@
 #include "event-core.h"
 
 #include <infiltratr/arithmetic.h>
+#include <infiltratr/core.h>
+#include <infiltratr/utf8.h>
 #include <string.h>
 
 typedef struct
@@ -157,7 +159,7 @@ text_is_valid(const gchar *text,
         return FALSE;
     length = strlen(text);
     return length <= maximum_bytes && (allow_empty || length > 0) &&
-           g_utf8_validate(text, (gssize)length, NULL);
+           infiltratr_utf8_validate(text, (size_t)length);
 }
 
 static gboolean
@@ -298,8 +300,8 @@ calendar_plus_event_index_upsert(CalendarPlusEventIndex *index,
         existing->all_day == replacement->all_day &&
         existing->start_unix == replacement->start_unix &&
         existing->end_unix == replacement->end_unix &&
-        g_strcmp0(existing->color, replacement->color) == 0 &&
-        g_strcmp0(existing->summary, replacement->summary) == 0)
+        infiltratr_string_equal(existing->color, replacement->color) &&
+        infiltratr_string_equal(existing->summary, replacement->summary))
     {
         existing->last_update_timestamp = input->update_timestamp;
         event_record_free(replacement);
