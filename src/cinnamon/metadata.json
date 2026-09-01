@@ -10,7 +10,7 @@
         "6.6",
         "6.7"
     ],
-    "version": "1.0.0",
+    "version": "1.0.1",
     "gettext-domain": "calendar-plus@the-infiltratr",
     "external-configuration-app": "settings.py",
     "website": "https://github.com/Infiltrator-Projects/Calendar-Plus",
