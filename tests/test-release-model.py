@@ -64,15 +64,16 @@ def main() -> None:
     assert (ROOT / "assets/fonts/mb-corpo-fonts.tar.xz").is_file()
     assert (ROOT / "tools/prepare-fonts.py").is_file()
     assert "MB Corpo S Title WEB" in read("src/cinnamon/applet.js")
-    assert "MB Corpo A Title Cond WEB" in read("src/cinnamon/applet.js")
     assert "calendar-plus-popup" in read("src/cinnamon/applet.js")
     assert "external-configuration-app" in read("src/cinnamon/metadata.json")
     stylesheet = read("src/cinnamon/stylesheet.css")
     assert "MB Corpo S Title WEB" in stylesheet
-    assert "MB Corpo A Title Cond WEB" in stylesheet
     assert '.calendar-plus-panel-clock {' in stylesheet
     assert 'font-family: "MB Corpo S Title WEB";' in stylesheet
     assert "font-weight: 700;" in stylesheet
+    applet = read("src/cinnamon/applet.js")
+    assert "FONT_PANEL_CLOCK" in applet
+    assert 'font-family: "MB Corpo S Title WEB"; font-weight: 700;' in applet
     assert "MB Corpo S Title WEB" in read("src/cinnamon/settings.py")
     assert "xlet-settings.py" in read("src/cinnamon/settings.py")
     assert "MB Corpo S Title WEB" in read("src/app/about-dialog.c")
