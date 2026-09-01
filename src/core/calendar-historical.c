@@ -22,6 +22,7 @@
 
 #include "calendar-historical.h"
 
+#include "calendar-helpers.h"
 #include "julian-day.h"
 
 #include <glib/gi18n-lib.h>
@@ -50,18 +51,6 @@ static const gchar *const egyptian_months[] = {
 };
 
 static gint64
-count_multiples_inclusive(gint64 first,
-                          gint64 last,
-                          gint64 divisor)
-{
-    if (first > last)
-        return 0;
-
-    return floor_divide(last, divisor) -
-           floor_divide(first - 1, divisor);
-}
-
-static gint64
 count_congruence_inclusive(gint64 first,
                            gint64 last,
                            gint64 modulus,
@@ -70,8 +59,15 @@ count_congruence_inclusive(gint64 first,
     if (first > last)
         return 0;
 
-    return floor_divide(last - residue, modulus) -
-           floor_divide(first - 1 - residue, modulus);
+    return calendar_plus_i64_subtract_saturating(
+        floor_divide(
+            calendar_plus_i64_subtract_saturating(last, residue),
+            modulus),
+        floor_divide(
+            calendar_plus_i64_subtract_saturating(
+                calendar_plus_i64_subtract_saturating(first, 1),
+                residue),
+            modulus));
 }
 
 static gboolean
@@ -91,10 +87,18 @@ static gint64
 revised_julian_leaps_inclusive(gint64 first,
                                gint64 last)
 {
-    return count_multiples_inclusive(first, last, 4) -
-           count_multiples_inclusive(first, last, 100) +
-           count_congruence_inclusive(first, last, 900, 200) +
-           count_congruence_inclusive(first, last, 900, 600);
+    gint64 result = calendar_plus_count_multiples_inclusive(
+        first, last, 4);
+
+    result = calendar_plus_i64_subtract_saturating(
+        result,
+        calendar_plus_count_multiples_inclusive(first, last, 100));
+    result = calendar_plus_i64_add_saturating(
+        result,
+        count_congruence_inclusive(first, last, 900, 200));
+    return calendar_plus_i64_add_saturating(
+        result,
+        count_congruence_inclusive(first, last, 900, 600));
 }
 
 static gint64
@@ -104,16 +108,31 @@ revised_julian_year_start(gint64 year)
 
     if (year >= REVISED_JULIAN_ANCHOR_YEAR)
     {
-        return anchor +
-               (year - REVISED_JULIAN_ANCHOR_YEAR) * 365 +
-               revised_julian_leaps_inclusive(
-                   REVISED_JULIAN_ANCHOR_YEAR, year - 1);
+        const gint64 years = calendar_plus_i64_subtract_saturating(
+            year, REVISED_JULIAN_ANCHOR_YEAR);
+        gint64 result = calendar_plus_i64_add_saturating(
+            anchor,
+            calendar_plus_i64_multiply_saturating(years, 365));
+
+        return calendar_plus_i64_add_saturating(
+            result,
+            revised_julian_leaps_inclusive(
+                REVISED_JULIAN_ANCHOR_YEAR,
+                calendar_plus_i64_subtract_saturating(year, 1)));
     }
 
-    return anchor -
-           (REVISED_JULIAN_ANCHOR_YEAR - year) * 365 -
-           revised_julian_leaps_inclusive(
-               year, REVISED_JULIAN_ANCHOR_YEAR - 1);
+    {
+        const gint64 years = calendar_plus_i64_subtract_saturating(
+            REVISED_JULIAN_ANCHOR_YEAR, year);
+        gint64 result = calendar_plus_i64_subtract_saturating(
+            anchor,
+            calendar_plus_i64_multiply_saturating(years, 365));
+
+        return calendar_plus_i64_subtract_saturating(
+            result,
+            revised_julian_leaps_inclusive(
+                year, REVISED_JULIAN_ANCHOR_YEAR - 1));
+    }
 }
 
 static gint
@@ -155,10 +174,12 @@ calendar_plus_revised_julian_fields_to_jdn(
     {
         CalendarPlusCalendarFields cursor = *fields;
         cursor.month = month;
-        jdn += calendar_plus_revised_julian_month_length(&cursor);
+        jdn = calendar_plus_i64_add_saturating(
+            jdn, calendar_plus_revised_julian_month_length(&cursor));
     }
 
-    return jdn + fields->day - 1;
+    return calendar_plus_i64_add_saturating(
+        jdn, fields->day - 1);
 }
 
 void
@@ -175,12 +196,12 @@ calendar_plus_revised_julian_fields_from_jdn(
     g_return_if_fail(fields != NULL);
 
     year = (gint64)floorl(
-        (long double)(jdn - anchor) / 365.2422222222222L) +
+        ((long double)jdn - (long double)anchor) / 365.2422222222222L) +
         REVISED_JULIAN_ANCHOR_YEAR;
 
     while (jdn < revised_julian_year_start(year))
         year--;
-    while (jdn >= revised_julian_year_start(year + 1))
+    while (jdn >= revised_julian_year_start(calendar_plus_i64_add_saturating(year, 1)))
         year++;
 
     start = revised_julian_year_start(year);
@@ -209,42 +230,13 @@ calendar_plus_revised_julian_fields_from_jdn(
     };
 }
 
-static gchar *
-format_named_date(const CalendarPlusCalendarFields *fields,
-                  CalendarPlusDatePart part,
-                  const gchar *const *months,
-                  const gchar *year_suffix)
-{
-    const gchar *month_name = _(months[fields->month]);
-
-    if (part == CALENDAR_PLUS_DATE_PART_DAY)
-        return g_strdup_printf("%d", fields->day);
-    if (part == CALENDAR_PLUS_DATE_PART_MONTH)
-        return g_strdup(month_name);
-    if (part == CALENDAR_PLUS_DATE_PART_YEAR)
-    {
-        return year_suffix != NULL ?
-            g_strdup_printf("%" G_GINT64_FORMAT " %s",
-                            fields->year, year_suffix) :
-            g_strdup_printf("%" G_GINT64_FORMAT, fields->year);
-    }
-
-    return year_suffix != NULL ?
-        g_strdup_printf(_("%d %s %lld %s"),
-                        fields->day, month_name,
-                        (long long)fields->year, year_suffix) :
-        g_strdup_printf(_("%d %s %lld"),
-                        fields->day, month_name,
-                        (long long)fields->year);
-}
-
 gchar *
 calendar_plus_revised_julian_format(
     const CalendarPlusCalendarFields *fields,
     CalendarPlusDatePart part)
 {
     g_return_val_if_fail(fields != NULL, g_strdup(""));
-    return format_named_date(fields, part, common_months, NULL);
+    return calendar_plus_format_named_date(fields, part, common_months, NULL);
 }
 
 void
@@ -321,7 +313,7 @@ calendar_plus_byzantine_format(
     CalendarPlusDatePart part)
 {
     g_return_val_if_fail(fields != NULL, g_strdup(""));
-    return format_named_date(fields, part, common_months, "A.M.");
+    return calendar_plus_format_named_date(fields, part, common_months, "A.M.");
 }
 
 void
@@ -378,7 +370,7 @@ calendar_plus_egyptian_format(
     CalendarPlusDatePart part)
 {
     g_return_val_if_fail(fields != NULL, g_strdup(""));
-    return format_named_date(fields, part, egyptian_months, NULL);
+    return calendar_plus_format_named_date(fields, part, egyptian_months, NULL);
 }
 
 /*
@@ -444,5 +436,5 @@ calendar_plus_armenian_format(
     CalendarPlusDatePart part)
 {
     g_return_val_if_fail(fields != NULL, g_strdup(""));
-    return format_named_date(fields, part, armenian_months, NULL);
+    return calendar_plus_format_named_date(fields, part, armenian_months, NULL);
 }
