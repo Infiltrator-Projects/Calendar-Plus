@@ -282,7 +282,8 @@ format_roman(const CalendarFields *fields,
     if (part == CALENDAR_PLUS_DATE_PART_MONTH)
         return g_strdup(_(roman_months[fields->month]));
     if (part == CALENDAR_PLUS_DATE_PART_YEAR)
-        return calendar_plus_roman_number(\n            calendar_plus_i64_add_saturating(fields->year, 753));
+        return calendar_plus_roman_number(
+            calendar_plus_i64_add_saturating(fields->year, 753));
 
     return calendar_plus_roman_format_date(fields);
 }
@@ -343,7 +344,7 @@ format_fixed(const CalendarFields *fields,
                                fields->year);
     }
 
-    return format_named_date(fields, part, fixed_months);
+    return calendar_plus_format_named_date(fields, part, fixed_months, NULL);
 }
 
 static gchar *
@@ -362,7 +363,7 @@ format_world(const CalendarFields *fields,
                                fields->year);
     }
 
-    return format_named_date(fields, part, common_months);
+    return calendar_plus_format_named_date(fields, part, common_months, NULL);
 }
 
 static gchar *
@@ -382,7 +383,7 @@ format_positivist(const CalendarFields *fields,
                                fields->year);
     }
 
-    return format_named_date(fields, part, positivist_months);
+    return calendar_plus_format_named_date(fields, part, positivist_months, NULL);
 }
 
 /*
