@@ -17,6 +17,7 @@
 
 #include "calendar-reform.h"
 
+#include "calendar-helpers.h"
 #include "julian-day.h"
 
 #include <math.h>
@@ -39,7 +40,7 @@ calendar_plus_french_is_leap(gint64 year)
      * choice is deterministic for proleptic dates where historical practice
      * does not define a single answer.
      */
-    const gint64 following = year + 1;
+    const gint64 following = calendar_plus_i64_add_saturating(year, 1);
 
     return positive_modulo(following, 4) == 0 &&
            (positive_modulo(following, 100) != 0 ||
@@ -47,28 +48,16 @@ calendar_plus_french_is_leap(gint64 year)
 }
 
 static gint64
-count_multiples_inclusive(gint64 first,
-                          gint64 last,
-                          gint64 divisor)
-{
-    if (first > last)
-        return 0;
-
-    return floor_divide(last, divisor) -
-           floor_divide(first - 1, divisor);
-}
-
-static gint64
 french_leap_count(gint64 first_shifted_year,
                   gint64 last_shifted_year)
 {
-    return count_multiples_inclusive(first_shifted_year,
+    return calendar_plus_count_multiples_inclusive(first_shifted_year,
                                      last_shifted_year,
                                      4) -
-           count_multiples_inclusive(first_shifted_year,
+           calendar_plus_count_multiples_inclusive(first_shifted_year,
                                      last_shifted_year,
                                      100) +
-           count_multiples_inclusive(first_shifted_year,
+           calendar_plus_count_multiples_inclusive(first_shifted_year,
                                      last_shifted_year,
                                      400);
 }
@@ -78,17 +67,31 @@ french_year_start(gint64 year)
 {
     if (year >= 1)
     {
-        const gint64 elapsed_years = year - 1;
+        const gint64 elapsed_years =
+            calendar_plus_i64_subtract_saturating(year, 1);
         const gint64 leap_days = french_leap_count(2, year);
+        const gint64 days = calendar_plus_i64_multiply_saturating(
+            elapsed_years, 365);
 
-        return FRENCH_EPOCH_JDN +
-               elapsed_years * 365 +
-               leap_days;
+        return calendar_plus_i64_add_saturating(
+            calendar_plus_i64_add_saturating(
+                FRENCH_EPOCH_JDN, days),
+            leap_days);
     }
 
-    return FRENCH_EPOCH_JDN -
-           (1 - year) * 365 -
-           french_leap_count(year + 1, 1);
+    {
+        const gint64 elapsed_years =
+            calendar_plus_i64_subtract_saturating(1, year);
+        const gint64 days = calendar_plus_i64_multiply_saturating(
+            elapsed_years, 365);
+        gint64 result = calendar_plus_i64_subtract_saturating(
+            FRENCH_EPOCH_JDN, days);
+
+        return calendar_plus_i64_subtract_saturating(
+            result,
+            french_leap_count(
+                calendar_plus_i64_add_saturating(year, 1), 1));
+    }
 }
 
 void
@@ -102,7 +105,7 @@ calendar_plus_french_fields_from_jdn(
      * does not depend on floating-point rounding at New Year.
      */
     gint64 year =
-        (gint64)floor((gdouble)(jdn - FRENCH_EPOCH_JDN) / 365.2425) + 1;
+        (gint64)floor(((gdouble)jdn - (gdouble)FRENCH_EPOCH_JDN) / 365.2425) + 1;
     gint64 start;
     gint day_of_year;
 
@@ -110,7 +113,7 @@ calendar_plus_french_fields_from_jdn(
 
     while (jdn < french_year_start(year))
         year--;
-    while (jdn >= french_year_start(year + 1))
+    while (jdn >= french_year_start(calendar_plus_i64_add_saturating(year, 1)))
         year++;
 
     start = french_year_start(year);
@@ -129,9 +132,14 @@ calendar_plus_french_fields_to_jdn(
 {
     g_return_val_if_fail(fields != NULL, FRENCH_EPOCH_JDN);
 
-    return french_year_start(fields->year) +
-           (gint64)(fields->month - 1) * 30 +
-           fields->day - 1;
+    gint64 result = french_year_start(fields->year);
+
+    result = calendar_plus_i64_add_saturating(
+        result,
+        calendar_plus_i64_multiply_saturating(
+            fields->month - 1, 30));
+    return calendar_plus_i64_add_saturating(
+        result, fields->day - 1);
 }
 
 gint
