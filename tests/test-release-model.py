@@ -308,6 +308,30 @@ def main() -> None:
     )
     assert "calendar_plus_project_info" in read("src/app/project-info.c")
 
+    # Keep generic mechanics in Common and one Calendar-owned shim/helper layer.
+    assert "src/core/calendar-helpers.c" in makefile
+    assert "src/core/integer-math.h" in makefile
+    assert "infiltratr_utf8_validate" in read("src/core/event-core.c")
+    assert "g_utf8_validate" not in read("src/core/event-core.c")
+    assert "g_utf8_validate" not in read("src/adapters/event-gvariant-adapter.c")
+    assert "calendar_plus_time_floor_divide" not in read("src/core/time-formats.c")
+    assert "calendar_plus_time_positive_modulo" not in read("src/core/time-formats.c")
+    assert "static gint64\ncount_multiples_inclusive" not in read(
+        "src/core/calendar-historical.c"
+    )
+    assert "static gint64\ncount_multiples_inclusive" not in read(
+        "src/core/calendar-reform.c"
+    )
+    assert "static gchar *\nformat_named_date" not in read(
+        "src/core/calendar-custom.c"
+    )
+    assert "static gchar *\nformat_named_date" not in read(
+        "src/core/calendar-historical.c"
+    )
+    assert "calendar_plus_julian_month_length" in read(
+        "src/core/calendar-ancient.c"
+    )
+
     control = read("debian/control")
     assert "cinnamon (>= 6.4)" in control
     for icu_major in range(72, 81):
