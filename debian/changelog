@@ -1,3 +1,19 @@
+calendar-plus (1.0.1) trixie; urgency=medium
+
+  * Move remaining generic string and UTF-8 validation mechanics onto
+    Infiltratr Common 1.15.5.
+  * Collapse duplicate Calendar floor/modulo and named-date helper code.
+  * Reuse one set of Gregorian/Julian month-length helpers across providers.
+  * Harden wide chronology and calendar-navigation arithmetic against signed
+    overflow using Common checked/saturating primitives.
+  * Keep chronology, astronomy, historical-calendar rules, ICU probing policy
+    and event semantics inside Calendar Plus rather than leaking them into
+    Common.
+  * Retain the native-installer downgrade handling introduced for the stable
+    1.0 version reset.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Tue, 01 Sep 2026 22:01:00 +1000
+
 calendar-plus (1.0.0) trixie; urgency=medium
 
   * Establish Calendar Plus 1.0 as the first stable public release.
