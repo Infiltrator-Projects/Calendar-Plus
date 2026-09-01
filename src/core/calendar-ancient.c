@@ -89,10 +89,17 @@ calendar_plus_mayan_fields_to_jdn(
 {
     g_return_val_if_fail(fields != NULL, MAYAN_EPOCH_JDN);
 
-    return MAYAN_EPOCH_JDN +
-           fields->year * MAYAN_KIN_PER_TUN +
-           (gint64)fields->month * MAYAN_KIN_PER_UINAL +
-           fields->day;
+    gint64 result = MAYAN_EPOCH_JDN;
+
+    result = calendar_plus_i64_add_saturating(
+        result,
+        calendar_plus_i64_multiply_saturating(
+            fields->year, MAYAN_KIN_PER_TUN));
+    result = calendar_plus_i64_add_saturating(
+        result,
+        calendar_plus_i64_multiply_saturating(
+            fields->month, MAYAN_KIN_PER_UINAL));
+    return calendar_plus_i64_add_saturating(result, fields->day);
 }
 
 gchar *
@@ -140,18 +147,6 @@ calendar_plus_roman_number(gint64 value)
     }
 }
 
-static gint
-julian_month_length(gint64 year,
-                    gint month)
-{
-    if (month == 2)
-        return positive_modulo(year, 4) == 0 ? 29 : 28;
-    return month == 4 ||
-           month == 6 ||
-           month == 9 ||
-           month == 11 ? 30 : 31;
-}
-
 gchar *
 calendar_plus_roman_format_date(
     const CalendarPlusCalendarFields *fields)
@@ -176,7 +171,7 @@ calendar_plus_roman_format_date(
     target_month = fields->month;
     target_year = fields->year;
     /* A.U.C. year numbering is the Julian/Gregorian year plus 753. */
-    year_roman = calendar_plus_roman_number(fields->year + 753);
+    year_roman = calendar_plus_roman_number(calendar_plus_i64_add_saturating(fields->year, 753));
 
     if (fields->day == 1)
     {
@@ -208,15 +203,15 @@ calendar_plus_roman_format_date(
          * +2 is therefore intentional inclusive counting, not an off-by-one.
          */
         count =
-            julian_month_length(fields->year, fields->month) -
+            calendar_plus_julian_month_length(fields->year, fields->month) -
             fields->day + 2;
         target_month++;
         if (target_month > 12)
         {
             target_month = 1;
-            target_year++;
+            target_year = calendar_plus_i64_add_saturating(target_year, 1);
             g_clear_pointer(&year_roman, g_free);
-            year_roman = calendar_plus_roman_number(target_year + 753);
+            year_roman = calendar_plus_roman_number(calendar_plus_i64_add_saturating(target_year, 753));
         }
     }
 
@@ -275,16 +270,21 @@ calendar_plus_mayan_format(
     }
 
     {
-        const gint64 total_kin =
-            fields->year * MAYAN_KIN_PER_TUN +
-            (gint64)fields->month * MAYAN_KIN_PER_UINAL +
-            fields->day;
+        gint64 total_kin = calendar_plus_i64_multiply_saturating(
+            fields->year, MAYAN_KIN_PER_TUN);
+
+        total_kin = calendar_plus_i64_add_saturating(
+            total_kin,
+            calendar_plus_i64_multiply_saturating(
+                fields->month, MAYAN_KIN_PER_UINAL));
+        total_kin = calendar_plus_i64_add_saturating(
+            total_kin, fields->day);
         const gint tzolkin_number =
-            (gint)positive_modulo(total_kin + 3, 13) + 1;
+            (gint)positive_modulo(calendar_plus_i64_add_saturating(total_kin, 3), 13) + 1;
         const gint tzolkin_name =
-            (gint)positive_modulo(total_kin + 19, 20);
+            (gint)positive_modulo(calendar_plus_i64_add_saturating(total_kin, 19), 20);
         const gint haab_index =
-            (gint)positive_modulo(total_kin + 348, MAYAN_KIN_PER_HAAB);
+            (gint)positive_modulo(calendar_plus_i64_add_saturating(total_kin, 348), MAYAN_KIN_PER_HAAB);
         const gint haab_month = haab_index < 360 ? haab_index / 20 : 18;
         const gint haab_day =
             haab_index < 360 ? haab_index % 20 : haab_index - 360;
