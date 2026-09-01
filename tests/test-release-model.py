@@ -67,8 +67,12 @@ def main() -> None:
     assert "MB Corpo A Title Cond WEB" in read("src/cinnamon/applet.js")
     assert "calendar-plus-popup" in read("src/cinnamon/applet.js")
     assert "external-configuration-app" in read("src/cinnamon/metadata.json")
-    assert "MB Corpo S Title WEB" in read("src/cinnamon/stylesheet.css")
-    assert "MB Corpo A Title Cond WEB" in read("src/cinnamon/stylesheet.css")
+    stylesheet = read("src/cinnamon/stylesheet.css")
+    assert "MB Corpo S Title WEB" in stylesheet
+    assert "MB Corpo A Title Cond WEB" in stylesheet
+    assert '.calendar-plus-panel-clock {' in stylesheet
+    assert 'font-family: "MB Corpo S Title WEB";' in stylesheet
+    assert "font-weight: 700;" in stylesheet
     assert "MB Corpo S Title WEB" in read("src/cinnamon/settings.py")
     assert "xlet-settings.py" in read("src/cinnamon/settings.py")
     assert "MB Corpo S Title WEB" in read("src/app/about-dialog.c")
