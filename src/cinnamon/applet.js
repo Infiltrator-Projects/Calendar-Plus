@@ -45,7 +45,7 @@ const FONT_UI_REGULAR =
     'font-family: "MB Corpo S Title WEB";';
 const FONT_UI_BOLD =
     'font-family: "MB Corpo S Title WEB"; font-weight: 700;';
-const FONT_DISPLAY =
+const FONT_PANEL_CLOCK =
     'font-family: "MB Corpo S Title WEB"; font-weight: 700;';
 
 function _applyTypography(actor, style) {
@@ -108,7 +108,7 @@ class CalendarPlusApplet extends Applet.Applet {
         const label = new St.Label({
             style_class: "applet-label calendar-plus-panel-clock",
         });
-        _applyTypography(label, FONT_DISPLAY);
+        _applyTypography(label, FONT_PANEL_CLOCK);
         label.reactive = true;
         label.track_hover = true;
         label.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
