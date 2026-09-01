@@ -22,6 +22,7 @@
 #include "calendar-custom.h"
 #include "calendar-ancient.h"
 #include "calendar-bahai.h"
+#include "calendar-helpers.h"
 #include "calendar-historical.h"
 #include "calendar-perpetual.h"
 #include "calendar-reform.h"
@@ -187,11 +188,7 @@ julian_fields_to_jdn(const CalendarFields *fields)
 static gint
 julian_month_length(const CalendarFields *fields)
 {
-    if (fields->month == 2)
-        return positive_modulo(fields->year, 4) == 0 ? 29 : 28;
-
-    return fields->month == 4 || fields->month == 6 ||
-           fields->month == 9 || fields->month == 11 ? 30 : 31;
+    return calendar_plus_julian_month_length(fields->year, fields->month);
 }
 
 static gint
@@ -253,30 +250,10 @@ default_month_from_period(gint period)
 }
 
 static gchar *
-format_named_date(const CalendarFields *fields,
-                  CalendarPlusDatePart part,
-                  const gchar *const *months)
-{
-    const gchar *month_name = _(months[fields->month]);
-
-    if (part == CALENDAR_PLUS_DATE_PART_DAY)
-        return g_strdup_printf("%d", fields->day);
-    if (part == CALENDAR_PLUS_DATE_PART_MONTH)
-        return g_strdup(month_name);
-    if (part == CALENDAR_PLUS_DATE_PART_YEAR)
-        return g_strdup_printf("%" G_GINT64_FORMAT, fields->year);
-
-    return g_strdup_printf(_("%d %s %lld"),
-                           fields->day,
-                           month_name,
-                           (long long)fields->year);
-}
-
-static gchar *
 format_julian(const CalendarFields *fields,
               CalendarPlusDatePart part)
 {
-    return format_named_date(fields, part, common_months);
+    return calendar_plus_format_named_date(fields, part, common_months, NULL);
 }
 
 static gchar *
@@ -574,11 +551,19 @@ calendar_plus_custom_add_months(CalendarMode mode,
         return jdn;
 
     if (provider->fixed_period_days > 0)
-        return jdn + (gint64)amount * provider->fixed_period_days;
+        return calendar_plus_i64_add_saturating(
+            jdn,
+            calendar_plus_i64_multiply_saturating(
+                amount, provider->fixed_period_days));
 
     provider->fields_from_jdn(jdn, &fields);
     period = provider->period_index(fields.month);
-    serial = fields.year * provider->periods_per_year + period + amount;
+    serial = calendar_plus_i64_add_saturating(
+        calendar_plus_i64_add_saturating(
+            calendar_plus_i64_multiply_saturating(
+                fields.year, provider->periods_per_year),
+            period),
+        amount);
     fields.year = floor_divide(serial, provider->periods_per_year);
     period = (gint)positive_modulo(serial, provider->periods_per_year);
     fields.month = provider->month_from_period(period);
@@ -599,7 +584,10 @@ calendar_plus_custom_add_years(CalendarMode mode,
         return jdn;
 
     if (provider->fixed_year_days > 0)
-        return jdn + (gint64)amount * provider->fixed_year_days;
+        return calendar_plus_i64_add_saturating(
+            jdn,
+            calendar_plus_i64_multiply_saturating(
+                amount, provider->fixed_year_days));
 
     provider->fields_from_jdn(jdn, &fields);
     fields.year += amount;
