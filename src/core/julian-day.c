@@ -12,11 +12,12 @@
  * described by the US Naval Observatory and Dershowitz/Reingold. Euclidean
  * division is essential for proleptic years before the common era because C
  * division truncates toward zero; that generic negative-safe arithmetic is
- * delegated to Infiltratr Common.
+ * delegated to Infiltratr Common. Wide intermediate additions and
+ * multiplications are saturating so malformed extreme inputs cannot trigger
+ * signed-overflow undefined behaviour.
  */
 
 #include "julian-day.h"
-
 
 gboolean
 calendar_plus_gregorian_is_leap(gint64 year)
@@ -28,7 +29,7 @@ calendar_plus_gregorian_is_leap(gint64 year)
 
 gint
 calendar_plus_gregorian_month_length(gint64 year,
-                       gint month)
+                                     gint month)
 {
     static const gint lengths[] = {
         31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
@@ -61,8 +62,8 @@ calendar_plus_gregorian_date_is_valid(gint year,
                                       gint month,
                                       gint day)
 {
-    (void)year;
-    return day >= 1 && day <= calendar_plus_gregorian_month_length(year, month);
+    return day >= 1 &&
+           day <= calendar_plus_gregorian_month_length(year, month);
 }
 
 gint64
@@ -71,19 +72,29 @@ calendar_plus_gregorian_to_jdn(gint64 year,
                                gint day)
 {
     const gint64 a = calendar_plus_floor_divide(14 - month, 12);
-    const gint64 y = calendar_plus_i64_add_saturating(
-        calendar_plus_i64_add_saturating(year, 4800), -a);
-    const gint64 m = calendar_plus_i64_add_saturating(
-        calendar_plus_i64_add_saturating(month,
-            calendar_plus_i64_multiply_saturating(12, a)), -3);
+    const gint64 y = calendar_plus_i64_subtract_saturating(
+        calendar_plus_i64_add_saturating(year, 4800), a);
+    const gint64 m = calendar_plus_i64_subtract_saturating(
+        calendar_plus_i64_add_saturating(
+            month, calendar_plus_i64_multiply_saturating(12, a)),
+        3);
+    gint64 result = day;
 
-    return day +
-           calendar_plus_floor_divide(calendar_plus_i64_add_saturating(calendar_plus_i64_multiply_saturating(153, m), 2), 5) +
-           calendar_plus_i64_multiply_saturating(365, y) +
-           calendar_plus_floor_divide(y, 4) -
-           calendar_plus_floor_divide(y, 100) +
-           calendar_plus_floor_divide(y, 400) -
-           32045;
+    result = calendar_plus_i64_add_saturating(
+        result,
+        calendar_plus_floor_divide(
+            calendar_plus_i64_add_saturating(
+                calendar_plus_i64_multiply_saturating(153, m), 2),
+            5));
+    result = calendar_plus_i64_add_saturating(
+        result, calendar_plus_i64_multiply_saturating(365, y));
+    result = calendar_plus_i64_add_saturating(
+        result, calendar_plus_floor_divide(y, 4));
+    result = calendar_plus_i64_subtract_saturating(
+        result, calendar_plus_floor_divide(y, 100));
+    result = calendar_plus_i64_add_saturating(
+        result, calendar_plus_floor_divide(y, 400));
+    return calendar_plus_i64_subtract_saturating(result, 32045);
 }
 
 void
@@ -93,21 +104,53 @@ calendar_plus_jdn_to_gregorian(gint64 jdn,
                                gint *day)
 {
     const gint64 a = calendar_plus_i64_add_saturating(jdn, 32044);
-    const gint64 b = calendar_plus_floor_divide(calendar_plus_i64_add_saturating(calendar_plus_i64_multiply_saturating(4, a), 3), 146097);
-    const gint64 c = a - calendar_plus_floor_divide(calendar_plus_i64_multiply_saturating(146097, b), 4);
-    const gint64 d = calendar_plus_floor_divide(calendar_plus_i64_add_saturating(calendar_plus_i64_multiply_saturating(4, c), 3), 1461);
-    const gint64 e = c - calendar_plus_floor_divide(calendar_plus_i64_multiply_saturating(1461, d), 4);
-    const gint64 m = calendar_plus_floor_divide(calendar_plus_i64_add_saturating(calendar_plus_i64_multiply_saturating(5, e), 2), 153);
+    const gint64 b = calendar_plus_floor_divide(
+        calendar_plus_i64_add_saturating(
+            calendar_plus_i64_multiply_saturating(4, a), 3),
+        146097);
+    const gint64 c = calendar_plus_i64_subtract_saturating(
+        a,
+        calendar_plus_floor_divide(
+            calendar_plus_i64_multiply_saturating(146097, b), 4));
+    const gint64 d = calendar_plus_floor_divide(
+        calendar_plus_i64_add_saturating(
+            calendar_plus_i64_multiply_saturating(4, c), 3),
+        1461);
+    const gint64 e = calendar_plus_i64_subtract_saturating(
+        c,
+        calendar_plus_floor_divide(
+            calendar_plus_i64_multiply_saturating(1461, d), 4));
+    const gint64 m = calendar_plus_floor_divide(
+        calendar_plus_i64_add_saturating(
+            calendar_plus_i64_multiply_saturating(5, e), 2),
+        153);
+    const gint64 month_adjustment =
+        calendar_plus_i64_multiply_saturating(
+            12, calendar_plus_floor_divide(m, 10));
+    gint64 computed_year;
 
     g_return_if_fail(year != NULL);
     g_return_if_fail(month != NULL);
     g_return_if_fail(day != NULL);
 
-    *day = (gint)(e - calendar_plus_floor_divide(calendar_plus_i64_add_saturating(calendar_plus_i64_multiply_saturating(153, m), 2), 5) + 1);
-    *month = (gint)(m + 3 -
-                    calendar_plus_i64_multiply_saturating(12, calendar_plus_floor_divide(m, 10)));
-    *year = (gint)(calendar_plus_i64_add_saturating(calendar_plus_i64_add_saturating(calendar_plus_i64_multiply_saturating(100, b), d), -4800) +
-                   calendar_plus_floor_divide(m, 10));
+    *day = (gint)calendar_plus_i64_add_saturating(
+        calendar_plus_i64_subtract_saturating(
+            e,
+            calendar_plus_floor_divide(
+                calendar_plus_i64_add_saturating(
+                    calendar_plus_i64_multiply_saturating(153, m), 2),
+                5)),
+        1);
+    *month = (gint)calendar_plus_i64_subtract_saturating(
+        calendar_plus_i64_add_saturating(m, 3), month_adjustment);
+
+    computed_year = calendar_plus_i64_add_saturating(
+        calendar_plus_i64_multiply_saturating(100, b), d);
+    computed_year = calendar_plus_i64_subtract_saturating(
+        computed_year, 4800);
+    computed_year = calendar_plus_i64_add_saturating(
+        computed_year, calendar_plus_floor_divide(m, 10));
+    *year = (gint)computed_year;
 }
 
 gint64
@@ -116,14 +159,25 @@ calendar_plus_julian_to_jdn(gint64 year,
                             gint day)
 {
     const gint64 a = calendar_plus_floor_divide(14 - month, 12);
-    const gint64 y = year + 4800 - a;
-    const gint64 m = month + 12 * a - 3;
+    const gint64 y = calendar_plus_i64_subtract_saturating(
+        calendar_plus_i64_add_saturating(year, 4800), a);
+    const gint64 m = calendar_plus_i64_subtract_saturating(
+        calendar_plus_i64_add_saturating(
+            month, calendar_plus_i64_multiply_saturating(12, a)),
+        3);
+    gint64 result = day;
 
-    return day +
-           calendar_plus_floor_divide(calendar_plus_i64_add_saturating(calendar_plus_i64_multiply_saturating(153, m), 2), 5) +
-           calendar_plus_i64_multiply_saturating(365, y) +
-           calendar_plus_floor_divide(y, 4) -
-           32083;
+    result = calendar_plus_i64_add_saturating(
+        result,
+        calendar_plus_floor_divide(
+            calendar_plus_i64_add_saturating(
+                calendar_plus_i64_multiply_saturating(153, m), 2),
+            5));
+    result = calendar_plus_i64_add_saturating(
+        result, calendar_plus_i64_multiply_saturating(365, y));
+    result = calendar_plus_i64_add_saturating(
+        result, calendar_plus_floor_divide(y, 4));
+    return calendar_plus_i64_subtract_saturating(result, 32083);
 }
 
 void
@@ -133,19 +187,42 @@ calendar_plus_jdn_to_julian(gint64 jdn,
                             gint *day)
 {
     const gint64 c = calendar_plus_i64_add_saturating(jdn, 32082);
-    const gint64 d = calendar_plus_floor_divide(4 * c + 3, 1461);
-    const gint64 e = c - calendar_plus_floor_divide(1461 * d, 4);
-    const gint64 m = calendar_plus_floor_divide(5 * e + 2, 153);
+    const gint64 d = calendar_plus_floor_divide(
+        calendar_plus_i64_add_saturating(
+            calendar_plus_i64_multiply_saturating(4, c), 3),
+        1461);
+    const gint64 e = calendar_plus_i64_subtract_saturating(
+        c,
+        calendar_plus_floor_divide(
+            calendar_plus_i64_multiply_saturating(1461, d), 4));
+    const gint64 m = calendar_plus_floor_divide(
+        calendar_plus_i64_add_saturating(
+            calendar_plus_i64_multiply_saturating(5, e), 2),
+        153);
+    const gint64 month_adjustment =
+        calendar_plus_i64_multiply_saturating(
+            12, calendar_plus_floor_divide(m, 10));
+    gint64 computed_year;
 
     g_return_if_fail(year != NULL);
     g_return_if_fail(month != NULL);
     g_return_if_fail(day != NULL);
 
-    *day = (gint)(e - calendar_plus_floor_divide(calendar_plus_i64_add_saturating(calendar_plus_i64_multiply_saturating(153, m), 2), 5) + 1);
-    *month = (gint)(m + 3 -
-                    12 * calendar_plus_floor_divide(m, 10));
-    *year = (gint)(calendar_plus_i64_add_saturating(d, -4800) +
-                   calendar_plus_floor_divide(m, 10));
+    *day = (gint)calendar_plus_i64_add_saturating(
+        calendar_plus_i64_subtract_saturating(
+            e,
+            calendar_plus_floor_divide(
+                calendar_plus_i64_add_saturating(
+                    calendar_plus_i64_multiply_saturating(153, m), 2),
+                5)),
+        1);
+    *month = (gint)calendar_plus_i64_subtract_saturating(
+        calendar_plus_i64_add_saturating(m, 3), month_adjustment);
+
+    computed_year = calendar_plus_i64_subtract_saturating(d, 4800);
+    computed_year = calendar_plus_i64_add_saturating(
+        computed_year, calendar_plus_floor_divide(m, 10));
+    *year = (gint)computed_year;
 }
 
 gint
@@ -153,8 +230,11 @@ calendar_plus_gregorian_day_of_year(gint year,
                                     gint month,
                                     gint day)
 {
-    return (gint)(calendar_plus_gregorian_to_jdn(year, month, day) -
-                  calendar_plus_gregorian_to_jdn(year, 1, 1) + 1);
+    const gint64 date = calendar_plus_gregorian_to_jdn(year, month, day);
+    const gint64 first = calendar_plus_gregorian_to_jdn(year, 1, 1);
+
+    return (gint)calendar_plus_i64_add_saturating(
+        calendar_plus_i64_subtract_saturating(date, first), 1);
 }
 
 gint
