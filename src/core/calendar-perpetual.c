@@ -106,7 +106,9 @@ calendar_plus_fixed_fields_to_jdn(
             ordinal++;
     }
 
-    return gregorian_to_jdn((gint)fields->year, 1, 1) + ordinal - 1;
+    return calendar_plus_i64_add_saturating(
+        gregorian_to_jdn((gint)fields->year, 1, 1),
+        ordinal - 1);
 }
 
 static const gint world_base_lengths[MONTHS_PER_GREGORIAN_YEAR] = {
