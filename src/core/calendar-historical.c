@@ -252,7 +252,8 @@ calendar_plus_byzantine_fields_from_jdn(
 
     jdn_to_julian(jdn, &julian_year, &month, &day);
     *fields = (CalendarPlusCalendarFields){
-        .year = (gint64)julian_year + (month >= 9 ? 5509 : 5508),
+        .year = calendar_plus_i64_add_saturating(
+            julian_year, month >= 9 ? 5509 : 5508),
         .month = month,
         .day = day,
         .auxiliary = 0,
@@ -268,8 +269,8 @@ calendar_plus_byzantine_fields_to_jdn(
 
     g_return_val_if_fail(fields != NULL, julian_to_jdn(2000, 1, 1));
 
-    julian_year =
-        fields->year - (fields->month >= 9 ? 5509 : 5508);
+    julian_year = calendar_plus_i64_subtract_saturating(
+        fields->year, fields->month >= 9 ? 5509 : 5508);
     g_return_val_if_fail(julian_year >= G_MININT &&
                          julian_year <= G_MAXINT,
                          julian_to_jdn(2000, 1, 1));
@@ -286,11 +287,10 @@ calendar_plus_byzantine_month_length(
     g_return_val_if_fail(fields != NULL, 0);
     g_return_val_if_fail(fields->month >= 1 && fields->month <= 12, 0);
 
-    julian_year = fields->year - (fields->month >= 9 ? 5509 : 5508);
-    return gregorian_shape_month_length(
-        julian_year,
-        fields->month,
-        positive_modulo(julian_year, 4) == 0);
+    julian_year = calendar_plus_i64_subtract_saturating(
+        fields->year, fields->month >= 9 ? 5509 : 5508);
+    return calendar_plus_julian_month_length(
+        julian_year, fields->month);
 }
 
 gint
@@ -321,8 +321,10 @@ calendar_plus_egyptian_fields_from_jdn(
     gint64 jdn,
     CalendarPlusCalendarFields *fields)
 {
-    const gint64 elapsed = jdn - EGYPTIAN_NABONASSAR_EPOCH_JDN;
-    const gint64 year = floor_divide(elapsed, 365) + 1;
+    const gint64 elapsed = calendar_plus_i64_subtract_saturating(
+        jdn, EGYPTIAN_NABONASSAR_EPOCH_JDN);
+    const gint64 year = calendar_plus_i64_add_saturating(
+        floor_divide(elapsed, 365), 1);
     const gint day_of_year = (gint)positive_modulo(elapsed, 365);
 
     g_return_if_fail(fields != NULL);
@@ -349,9 +351,16 @@ calendar_plus_egyptian_fields_to_jdn(
         (fields->month - 1) * 30 :
         360;
 
-    return EGYPTIAN_NABONASSAR_EPOCH_JDN +
-           (fields->year - 1) * 365 +
-           offset + fields->day - 1;
+    gint64 result = EGYPTIAN_NABONASSAR_EPOCH_JDN;
+
+    result = calendar_plus_i64_add_saturating(
+        result,
+        calendar_plus_i64_multiply_saturating(
+            calendar_plus_i64_subtract_saturating(fields->year, 1),
+            365));
+    result = calendar_plus_i64_add_saturating(result, offset);
+    return calendar_plus_i64_add_saturating(
+        result, fields->day - 1);
 }
 
 gint
@@ -394,7 +403,8 @@ calendar_plus_armenian_fields_from_jdn(
     gint64 jdn,
     CalendarPlusCalendarFields *fields)
 {
-    const gint64 elapsed = jdn - ARMENIAN_EPOCH_JDN;
+    const gint64 elapsed = calendar_plus_i64_subtract_saturating(
+        jdn, ARMENIAN_EPOCH_JDN);
     const gint64 year = floor_divide(elapsed, 365) + 1;
     const gint day_of_year = (gint)positive_modulo(elapsed, 365);
 
@@ -417,8 +427,16 @@ calendar_plus_armenian_fields_to_jdn(
 
     g_return_val_if_fail(fields != NULL, ARMENIAN_EPOCH_JDN);
     offset = fields->month <= 12 ? (fields->month - 1) * 30 : 360;
-    return ARMENIAN_EPOCH_JDN + (fields->year - 1) * 365 +
-           offset + fields->day - 1;
+    gint64 result = ARMENIAN_EPOCH_JDN;
+
+    result = calendar_plus_i64_add_saturating(
+        result,
+        calendar_plus_i64_multiply_saturating(
+            calendar_plus_i64_subtract_saturating(fields->year, 1),
+            365));
+    result = calendar_plus_i64_add_saturating(result, offset);
+    return calendar_plus_i64_add_saturating(
+        result, fields->day - 1);
 }
 
 gint
