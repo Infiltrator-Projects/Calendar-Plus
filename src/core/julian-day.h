@@ -20,14 +20,15 @@
 #define CALENDAR_PLUS_JULIAN_DAY_H
 
 #include "calendar-internal.h"
+#include "integer-math.h"
 
 G_BEGIN_DECLS
 
 #define CALENDAR_PLUS_UNIX_EPOCH_JDN ((gint64)2440588)
 
-gint64 calendar_plus_floor_divide(gint64 value, gint64 divisor);
-gint64 calendar_plus_positive_modulo(gint64 value, gint64 modulus);
 gboolean calendar_plus_gregorian_is_leap(gint64 year);
+gint calendar_plus_gregorian_month_length(gint64 year, gint month);
+gint calendar_plus_julian_month_length(gint64 year, gint month);
 gboolean calendar_plus_gregorian_date_is_valid(gint year,
                                                 gint month,
                                                 gint day);
