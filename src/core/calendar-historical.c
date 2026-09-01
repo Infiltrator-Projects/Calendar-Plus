@@ -200,9 +200,9 @@ calendar_plus_revised_julian_fields_from_jdn(
         REVISED_JULIAN_ANCHOR_YEAR;
 
     while (jdn < revised_julian_year_start(year))
-        year--;
+        year = calendar_plus_i64_subtract_saturating(year, 1);
     while (jdn >= revised_julian_year_start(calendar_plus_i64_add_saturating(year, 1)))
-        year++;
+        year = calendar_plus_i64_add_saturating(year, 1);
 
     start = revised_julian_year_start(year);
     remaining = (gint)(jdn - start);
@@ -405,7 +405,7 @@ calendar_plus_armenian_fields_from_jdn(
 {
     const gint64 elapsed = calendar_plus_i64_subtract_saturating(
         jdn, ARMENIAN_EPOCH_JDN);
-    const gint64 year = floor_divide(elapsed, 365) + 1;
+    const gint64 year = calendar_plus_i64_add_saturating(\n        floor_divide(elapsed, 365), 1);
     const gint day_of_year = (gint)positive_modulo(elapsed, 365);
 
     g_return_if_fail(fields != NULL);
