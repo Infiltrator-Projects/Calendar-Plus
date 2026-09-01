@@ -84,14 +84,14 @@ CORE_HEADERS := \
 	src/core/calendar-custom.h \
 	src/core/event-types.h \
 	src/core/event-core.h \
-	src/core/event-source.h
+	src/core/event-source.h \
+	src/core/integer-math.h \
+	src/core/calendar-helpers.h
 PRIVATE_HEADERS := \
 	src/app/project-info.h \
 	src/adapters/clock-glib-adapter.h \
 	src/adapters/calendar-system-private.h \
-	src/adapters/event-store-private.h \
-	src/core/integer-math.h \
-	src/core/calendar-helpers.h
+	src/adapters/event-store-private.h
 HEADERS := $(sort $(PUBLIC_HEADERS) $(CORE_HEADERS) $(PRIVATE_HEADERS))
 # Common is consumed through its own public static-library build product.
 # Calendar Plus deliberately does not enumerate or compile Common's private
