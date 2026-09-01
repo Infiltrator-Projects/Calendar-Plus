@@ -10,7 +10,6 @@
 #include "time-formats.h"
 #include "time-formats-internal.h"
 
-#include <infiltratr/arithmetic.h>
 #include <infiltratr/core.h>
 #include <infiltratr/timing.h>
 #include <math.h>
@@ -33,22 +32,6 @@ typedef struct
 } TimeProvider;
 
 enum { CALENDAR_PLUS_TIME_PROVIDER_ABI = 1 };
-
-gint64
-calendar_plus_time_floor_divide(gint64 value, gint64 divisor)
-{
-    int64_t quotient = 0;
-    g_return_val_if_fail(infiltratr_i64_floor_divmod(value, divisor, &quotient, NULL), 0);
-    return quotient;
-}
-
-gint64
-calendar_plus_time_positive_modulo(gint64 value, gint64 modulus)
-{
-    int64_t remainder = 0;
-    g_return_val_if_fail(infiltratr_i64_floor_divmod(value, modulus, NULL, &remainder), 0);
-    return remainder;
-}
 
 gint64
 calendar_plus_time_local_microseconds_of_day(gint64 unix_microseconds, gint utc_offset_seconds)
