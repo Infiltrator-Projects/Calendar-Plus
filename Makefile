@@ -9,7 +9,7 @@ G_IR_COMPILER ?= g-ir-compiler
 PREFIX ?= /usr
 DESTDIR ?=
 
-VERSION := 1.0.0
+VERSION := 1.0.1
 UUID := calendar-plus@the-infiltratr
 APPLET_SRC_DIR := src/cinnamon
 I18N_DIR := src/i18n
@@ -19,8 +19,8 @@ FONT_ARCHIVE := assets/fonts/mb-corpo-fonts.tar.xz
 FONT_BUILD_DIR := $(BUILD_DIR)/fonts
 INFILTRATR_COMMON_DIR := src/vendor/infiltratr-common
 INFILTRATR_COMMON_URL := https://github.com/Infiltrator-Projects/Infiltrator-Libraries.git
-INFILTRATR_COMMON_COMMIT := 046406bea2aefa539c74e1038b6c20825eca8af7
-INFILTRATR_COMMON_VERSION := 1.15.4
+INFILTRATR_COMMON_COMMIT := 014e6594bb8b11e1dc013784a358466bda2582c1
+INFILTRATR_COMMON_VERSION := 1.15.5
 LIB_BASENAME := calendar-plus
 LIB_SONAME := lib$(LIB_BASENAME).so.0
 LIB_REALNAME := lib$(LIB_BASENAME).so.0.0.0
@@ -35,6 +35,7 @@ CORE_SOURCES := \
 	src/core/time-astronomy.c \
 	src/core/julian-day.c \
 	src/core/calendar-registry.c \
+	src/core/calendar-helpers.c \
 	src/core/icu-calendar.c \
 	src/core/icu-compat-bridge.c \
 	src/core/calendar-ancient.c \
@@ -88,7 +89,9 @@ PRIVATE_HEADERS := \
 	src/app/project-info.h \
 	src/adapters/clock-glib-adapter.h \
 	src/adapters/calendar-system-private.h \
-	src/adapters/event-store-private.h
+	src/adapters/event-store-private.h \
+	src/core/integer-math.h \
+	src/core/calendar-helpers.h
 HEADERS := $(sort $(PUBLIC_HEADERS) $(CORE_HEADERS) $(PRIVATE_HEADERS))
 # Common is consumed through its own public static-library build product.
 # Calendar Plus deliberately does not enumerate or compile Common's private
@@ -97,7 +100,8 @@ INFILTRATR_COMMON_HEADERS := \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/core.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/arithmetic.h \
 	$(INFILTRATR_COMMON_DIR)/include/infiltratr/timing.h \
-	$(INFILTRATR_COMMON_DIR)/include/infiltratr/dynlib.h
+	$(INFILTRATR_COMMON_DIR)/include/infiltratr/dynlib.h \
+	$(INFILTRATR_COMMON_DIR)/include/infiltratr/utf8.h
 # The Common sub-make runs from src/vendor/infiltratr-common. Keep its BUILD_DIR
 # textual value relative and whitespace-free so GNU make never has to parse the
 # checkout's absolute path as a target name.
