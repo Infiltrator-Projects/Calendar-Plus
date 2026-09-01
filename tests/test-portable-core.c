@@ -8,6 +8,7 @@
  */
 
 #include "calendar-core.h"
+#include "calendar-helpers.h"
 #include "calendar-registry.h"
 #include "calendar-swedish.h"
 #include "clock-engine.h"
@@ -465,6 +466,26 @@ test_event_source_and_snapshot(void)
 }
 
 static void
+test_shared_calendar_helpers(void)
+{
+    g_assert_cmpint(calendar_plus_gregorian_month_length(2000, 2), ==, 29);
+    g_assert_cmpint(calendar_plus_gregorian_month_length(1900, 2), ==, 28);
+    g_assert_cmpint(calendar_plus_julian_month_length(1900, 2), ==, 29);
+    g_assert_cmpint(calendar_plus_julian_month_length(1901, 2), ==, 28);
+
+    g_assert_cmpint(calendar_plus_count_multiples_inclusive(1, 12, 4), ==, 3);
+    g_assert_cmpint(calendar_plus_count_multiples_inclusive(-12, -1, 4), ==, 3);
+    g_assert_cmpint(calendar_plus_count_multiples_inclusive(-4, 4, 4), ==, 3);
+    g_assert_cmpint(calendar_plus_count_multiples_inclusive(5, 4, 4), ==, 0);
+
+    /* Extreme public inputs must remain defined under ASan/UBSan. */
+    (void)calendar_plus_gregorian_to_jdn(G_MININT64, 1, 1);
+    (void)calendar_plus_gregorian_to_jdn(G_MAXINT64, 12, 31);
+    (void)calendar_plus_julian_to_jdn(G_MININT64, 1, 1);
+    (void)calendar_plus_julian_to_jdn(G_MAXINT64, 12, 31);
+}
+
+static void
 test_swedish_historical_boundaries(void)
 {
     CalendarPlusCalendarFields fields = { 0 };
@@ -648,6 +669,8 @@ main(int argc,
     g_test_add_func("/portable/calendar-records", test_calendar_records);
     g_test_add_func("/portable/calendar-reference-vectors",
                     test_calendar_reference_vectors);
+    g_test_add_func("/portable/shared-calendar-helpers",
+                    test_shared_calendar_helpers);
     g_test_add_func("/portable/event-source", test_event_source_and_snapshot);
     g_test_add_func("/portable/time-catalogue", test_time_catalogue);
     g_test_add_func("/portable/swedish-historical-boundaries",
