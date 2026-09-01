@@ -6,7 +6,7 @@
 
 Calendar Plus is a native Cinnamon panel clock and calendar with alternative clock modes, 30 selectable calendar systems and CalendarServer integration.
 
-**Stable release:** 1.0.
+**Stable release:** 1.0.1.
 
 **Runtime:** Cinnamon 6.4, 6.6 and 6.7.
 
@@ -41,7 +41,7 @@ src/
 └── vendor/     Pinned Infiltratr Common submodule
 ```
 
-The portable core is kept separate from presentation and platform adapters. Cinnamon owns desktop actors, settings and CalendarServer transport; the native C library owns calendar arithmetic, alternative clocks, scheduling and event semantics.
+The portable core is kept separate from presentation and platform adapters. Cinnamon owns desktop actors, settings and CalendarServer transport; the native C library owns chronology, astronomy, alternative clocks and event semantics. Generic strings, UTF-8 validation, checked/saturating arithmetic, timing and dynamic-library mechanics are supplied by the pinned Infiltratr Common library.
 
 ### Native ABI policy
 
