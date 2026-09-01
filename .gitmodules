@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[submodule "src/vendor/infiltratr-common"]
+	path = src/vendor/infiltratr-common
+	url = https://github.com/Infiltrator-Projects/Infiltrator-Libraries.git

@@ -1,0 +1,179 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+name: build-and-test
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+
+concurrency:
+  group: build-and-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-policy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Enforce main-only automatic immutable publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          release=.github/workflows/release.yml
+          grep -Fq '  workflow_run:' "$release"
+          grep -Fq 'workflows: ["build-and-test"]' "$release"
+          grep -Fq "startsWith(github.event.workflow_run.head_commit.message, 'Release ')" "$release"
+          grep -Fq "github.event.workflow_run.head_branch == 'main'" "$release"
+          grep -Fq 'published releases are immutable' "$release"
+          grep -Fq 'gh release create "$tag"' "$release"
+          grep -Fq 'gh release upload "$tag" "$deb" "$installer" --clobber' "$release"
+          grep -Fq 'gh release edit "$tag" --draft=false --latest' "$release"
+          if grep -Fq 'local-source.zip' "$release"; then
+            echo 'GitHub supplies source archives; do not upload a duplicate ZIP.' >&2
+            exit 1
+          fi
+          if grep -Eq '^  (workflow_dispatch|pull_request|schedule):' "$release"; then
+            echo 'Calendar Plus publication must be automatic from tested main only.' >&2
+            exit 1
+          fi
+          if grep -Eq '^  pull_request:|^  merge_group:' .github/workflows/ci.yml; then
+            echo 'Calendar Plus CI must use main only.' >&2
+            exit 1
+          fi
+
+  native:
+    runs-on: linux-native
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+      - name: Install build dependencies
+        if: runner.environment == 'github-hosted'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential clang gettext gobject-introspection gjs \
+            gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
+            pkg-config python3 ripgrep
+      - name: Build and test
+        env:
+          CC: ${{ matrix.compiler }}
+        run: make clean check
+      - name: Probe exact-version live Cinnamon qualification
+        if: matrix.compiler == 'gcc'
+        id: live-cinnamon
+        run: tools/live-cinnamon-ci-smoke.sh --probe
+      - name: Live Cinnamon smoke of exact source revision
+        if: >-
+          matrix.compiler == 'gcc' &&
+          steps.live-cinnamon.outputs.ready == 'true'
+        env:
+          CALENDAR_PLUS_LIVE_MODE: ${{ steps.live-cinnamon.outputs.mode }}
+        run: tools/live-cinnamon-ci-smoke.sh
+
+  sanitizer:
+    runs-on: linux-native
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+      - name: Install build dependencies
+        if: runner.environment == 'github-hosted'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential gobject-introspection \
+            gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev pkg-config
+      - name: ASan and UBSan
+        run: make sanitize
+
+  coverage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+      - name: Install coverage dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential gcovr libglib2.0-dev libicu-dev pkg-config
+      - name: Coverage gate
+        run: make coverage
+
+  static-analysis:
+    runs-on: linux-native
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+      - name: Install analysis dependencies
+        if: runner.environment == 'github-hosted'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang-tidy libglib2.0-dev libicu-dev pkg-config
+      - name: Clang-Tidy
+        run: make static-analysis
+
+  debian-package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+      - name: Install packaging dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential debhelper devscripts gettext gobject-introspection gjs \
+            gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
+            pkg-config python3 ripgrep \
+            lintian shellcheck
+      - name: Run complete release gates
+        run: make release-check
+
+  package-install:
+    runs-on: ubuntu-24.04
+    container:
+      image: debian:13
+    steps:
+      - name: Prepare clean Debian container
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates git
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+      - name: Install package build dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential debhelper devscripts gettext gobject-introspection gjs \
+            gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
+            pkg-config python3 ripgrep
+      - name: Build, install, execute and purge generic package
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^VERSION := //p' Makefile)"
+          dpkg-buildpackage -us -uc -b
+          deb="../calendar-plus_${version}_amd64.deb"
+          test -s "$deb"
+          apt-get install -y --no-install-recommends "$deb"
+          test "$(dpkg-query -W -f='${Status}' calendar-plus)" = "install ok installed"
+          /usr/libexec/calendar-plus-about --print-metadata | grep -qx "version=$version"
+          CALENDAR_PLUS_EXPECTED_VERSION="$version" gjs tests/smoke-typelib.js >/dev/null
+          apt-get purge -y calendar-plus
+          ! dpkg-query -W calendar-plus >/dev/null 2>&1
+          apt-get check

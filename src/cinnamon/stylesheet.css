@@ -1,0 +1,28 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (C) 2026 Shannon Smith
+ *
+ * Calendar Plus typography is deliberately scoped to its own actors. Cinnamon
+ * loads applet stylesheets into the shell theme globally, so unscoped font
+ * rules would alter unrelated applets.
+ */
+
+.calendar-plus-applet,
+.calendar-plus-applet *,
+.calendar-plus-popup,
+.calendar-plus-popup * {
+    font-family: "MB Corpo S Title WEB";
+}
+
+.calendar-plus-panel-clock {
+    font-family: "MB Corpo A Title Cond WEB";
+    font-weight: 400;
+}
+
+.calendar-plus-popup .calendar-today-day-label,
+.calendar-plus-popup .calendar-month-label,
+.calendar-plus-popup .calendar-day-heading,
+.calendar-plus-popup .calendar-events-date-label,
+.calendar-plus-popup .calendar-events-no-events-label {
+    font-family: "MB Corpo S Title WEB";
+    font-weight: 700;
+}

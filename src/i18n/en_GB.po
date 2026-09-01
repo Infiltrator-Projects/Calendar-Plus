@@ -1,0 +1,644 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Shannon Smith
+# This file is distributed under the same license as the Calendar Plus package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Calendar Plus 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-01 09:25+0000\n"
+"PO-Revision-Date: 2026-09-01 09:25+0000\n"
+"Last-Translator: Shannon Smith\n"
+"Language-Team: en_GB\n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#, c-format
+msgid "%d %s %lld"
+msgstr "%d %s %lld"
+
+#, c-format
+msgid "%d %s %lld %s"
+msgstr "%d %s %lld %s"
+
+#, c-format
+msgid "%d %s %lld B.E."
+msgstr "%d %s %lld B.E."
+
+#, c-format
+msgid "%d %s, An %s"
+msgstr "%d %s, An %s"
+
+msgid "A native C-backed Cinnamon clock and calendar authored by Shannon Smith, with multiple time and calendar systems."
+msgstr "A native C-backed Cinnamon clock and calendar authored by Shannon Smith, with multiple time and calendar systems."
+
+msgid "About Calendar Plus"
+msgstr "About Calendar Plus"
+
+msgid "Ahekan"
+msgstr "Ahekan"
+
+msgid "Apparent solar time"
+msgstr "Apparent solar time"
+
+msgid "April"
+msgstr "April"
+
+msgid "Aprilis"
+msgstr "Aprilis"
+
+msgid "Aracʿ"
+msgstr "Aracʿ"
+
+msgid "Archimedes"
+msgstr "Archimedes"
+
+msgid "Areg"
+msgstr "Areg"
+
+msgid "Aristotle"
+msgstr "Aristotle"
+
+msgid "Armenian traditional (365-day)"
+msgstr "Armenian traditional (365-day)"
+
+msgid "Asmá’"
+msgstr "Asmá’"
+
+msgid "Astronomical Julian Date (JD)"
+msgstr "Astronomical Julian Date (JD)"
+
+msgid "August"
+msgstr "August"
+
+msgid "Augustus"
+msgstr "Augustus"
+
+msgid "Aweleacʿ"
+msgstr "Aweleacʿ"
+
+msgid "Ayyám-i-Há"
+msgstr "Ayyám-i-Há"
+
+msgid "Babylonian hours (from sunrise)"
+msgstr "Babylonian hours (from sunrise)"
+
+msgid "Bahá"
+msgstr "Bahá"
+
+msgid "Bahá’í (Badíʿ)"
+msgstr "Bahá’í (Badíʿ)"
+
+msgid "Bichat"
+msgstr "Bichat"
+
+msgid "Binary clock"
+msgstr "Binary clock"
+
+msgid "Brumaire"
+msgstr "Brumaire"
+
+msgid "Buddhist"
+msgstr "Buddhist"
+
+msgid "Byzantine (Anno Mundi)"
+msgstr "Byzantine (Anno Mundi)"
+
+msgid "Caesar"
+msgstr "Caesar"
+
+msgid "Calendar Plus"
+msgstr "Calendar Plus"
+
+msgid "Calendar systems"
+msgstr "Calendar systems"
+
+msgid "Charlemagne"
+msgstr "Charlemagne"
+
+msgid "Check this to define a custom format for the date in the calendar applet."
+msgstr "Check this to define a custom format for the date in the calendar applet."
+
+msgid "Check this to display events in the calendar."
+msgstr "Check this to display events in the calendar."
+
+msgid "Check this to show week numbers in the calendar."
+msgstr "Check this to show week numbers in the calendar."
+
+msgid "Chinese hundred-kè time"
+msgstr "Chinese hundred-kè time"
+
+msgid "Chinese traditional"
+msgstr "Chinese traditional"
+
+msgid "Choiak"
+msgstr "Choiak"
+
+msgid "Choose the time system displayed in the Cinnamon panel."
+msgstr "Choose the time system displayed in the Cinnamon panel."
+
+msgid "Click this button to know more about the syntax for date formats."
+msgstr "Click this button to know more about the syntax for date formats."
+
+msgid "Clock"
+msgstr "Clock"
+
+msgid "Clock mode"
+msgstr "Clock mode"
+
+msgid "Controls the popup calendar grid, date heading and calendar navigation. Events remain attached to their original dates."
+msgstr "Controls the popup calendar grid, date heading and calendar navigation. Events remain attached to their original dates."
+
+msgid "Coptic"
+msgstr "Coptic"
+
+msgid ""
+"Copyright © 2026 Shannon Smith\n"
+"\n"
+"This program comes with absolutely no warranty.\n"
+"See the GNU GPL v3+ License for details."
+msgstr ""
+"Copyright © 2026 Shannon Smith\n"
+"\n"
+"This program comes with absolutely no warranty.\n"
+"See the GNU GPL v3+ License for details."
+
+msgid "Dangi (traditional Korean)"
+msgstr "Dangi (traditional Korean)"
+
+msgid "Dante"
+msgstr "Dante"
+
+msgid "Date format"
+msgstr "Date format"
+
+msgid "Date format for tooltip"
+msgstr "Date format for tooltip"
+
+msgid "December"
+msgstr "December"
+
+msgid "Descartes"
+msgstr "Descartes"
+
+msgid "Display"
+msgstr "Display"
+
+msgid "Edo Japanese seasonal time"
+msgstr "Edo Japanese seasonal time"
+
+msgid "Egyptian civil (Nabonassar era)"
+msgstr "Egyptian civil (Nabonassar era)"
+
+msgid "Epagomenal days"
+msgstr "Epagomenal days"
+
+msgid "Epiphi"
+msgstr "Epiphi"
+
+msgid "Ethiopian"
+msgstr "Ethiopian"
+
+msgid "Ethiopic (Amete Alem)"
+msgstr "Ethiopic (Amete Alem)"
+
+msgid "Februarius"
+msgstr "Februarius"
+
+msgid "February"
+msgstr "February"
+
+msgid "Festival of All the Dead"
+msgstr "Festival of All the Dead"
+
+msgid "Festival of Holy Women"
+msgstr "Festival of Holy Women"
+
+msgid "Floréal"
+msgstr "Floréal"
+
+msgid "Frederick"
+msgstr "Frederick"
+
+msgid "French Republican"
+msgstr "French Republican"
+
+msgid "French Republican decimal time (10-hour day)"
+msgstr "French Republican decimal time (10-hour day)"
+
+msgid "Frimaire"
+msgstr "Frimaire"
+
+msgid "Fructidor"
+msgstr "Fructidor"
+
+msgid "Geographic location"
+msgstr "Geographic location"
+
+msgid "Germinal"
+msgstr "Germinal"
+
+msgid "Gregorian"
+msgstr "Gregorian"
+
+msgid "Gutenberg"
+msgstr "Gutenberg"
+
+msgid "Hathyr"
+msgstr "Hathyr"
+
+msgid "Hebrew"
+msgstr "Hebrew"
+
+msgid "Hexadecimal time (0000 to FFFF)"
+msgstr "Hexadecimal time (0000 to FFFF)"
+
+msgid "Homer"
+msgstr "Homer"
+
+msgid "Hoṙi"
+msgstr "Hoṙi"
+
+msgid "Hroticʿ"
+msgstr "Hroticʿ"
+
+msgid "ISO week calendar"
+msgstr "ISO week calendar"
+
+msgid "Ianuarius"
+msgstr "Ianuarius"
+
+msgid "Indian National (Saka)"
+msgstr "Indian National (Saka)"
+
+msgid "Indian ghaṭī time (from sunrise)"
+msgstr "Indian ghaṭī time (from sunrise)"
+
+msgid "International Fixed"
+msgstr "International Fixed"
+
+msgid "Internet Time (@000 to @999)"
+msgstr "Internet Time (@000 to @999)"
+
+msgid "Islamic (Umm al-Qura)"
+msgstr "Islamic (Umm al-Qura)"
+
+msgid "Islamic (astronomical approximation)"
+msgstr "Islamic (astronomical approximation)"
+
+msgid "Islamic (civil/tabular)"
+msgstr "Islamic (civil/tabular)"
+
+msgid "Islamic (tabular, astronomical epoch)"
+msgstr "Islamic (tabular, astronomical epoch)"
+
+msgid "Italian hours (from sunset)"
+msgstr "Italian hours (from sunset)"
+
+msgid "Iulius"
+msgstr "Iulius"
+
+msgid "Iunius"
+msgstr "Iunius"
+
+msgid "Jalál"
+msgstr "Jalál"
+
+msgid "Jamál"
+msgstr "Jamál"
+
+msgid "January"
+msgstr "January"
+
+msgid "Japanese imperial era"
+msgstr "Japanese imperial era"
+
+msgid "Julian"
+msgstr "Julian"
+
+msgid "July"
+msgstr "July"
+
+msgid "June"
+msgstr "June"
+
+msgid "Kalimát"
+msgstr "Kalimát"
+
+msgid "Kamál"
+msgstr "Kamál"
+
+msgid "Keyboard shortcuts"
+msgstr "Keyboard shortcuts"
+
+msgid "Kʿałocʿ"
+msgstr "Kʿałocʿ"
+
+msgid "Latitude in degrees"
+msgstr "Latitude in degrees"
+
+msgid "Leap Day"
+msgstr "Leap Day"
+
+msgid "Leapyear Day"
+msgstr "Leapyear Day"
+
+msgid "Local mean solar time"
+msgstr "Local mean solar time"
+
+msgid "Local sidereal time"
+msgstr "Local sidereal time"
+
+msgid "Longitude in degrees"
+msgstr "Longitude in degrees"
+
+msgid "Maius"
+msgstr "Maius"
+
+msgid "March"
+msgstr "March"
+
+msgid "Mareri"
+msgstr "Mareri"
+
+msgid "Margacʿ"
+msgstr "Margacʿ"
+
+msgid "Martius"
+msgstr "Martius"
+
+msgid "Mashíyyat"
+msgstr "Mashíyyat"
+
+msgid "Masá’il"
+msgstr "Masá’il"
+
+msgid "May"
+msgstr "May"
+
+msgid "Mayan Long Count"
+msgstr "Mayan Long Count"
+
+msgid "Mecheir"
+msgstr "Mecheir"
+
+msgid "Mehekan"
+msgstr "Mehekan"
+
+msgid "Mesore"
+msgstr "Mesore"
+
+msgid "Messidor"
+msgstr "Messidor"
+
+msgid "Minguo (Republic of China)"
+msgstr "Minguo (Republic of China)"
+
+msgid "Modified Julian Date (MJD)"
+msgstr "Modified Julian Date (MJD)"
+
+msgid "Moses"
+msgstr "Moses"
+
+msgid "Mulk"
+msgstr "Mulk"
+
+msgid "Nawasard"
+msgstr "Nawasard"
+
+msgid "Next month"
+msgstr "Next month"
+
+msgid "Next year"
+msgstr "Next year"
+
+msgid "Nivôse"
+msgstr "Nivôse"
+
+msgid "None"
+msgstr "None"
+
+msgid "November"
+msgstr "November"
+
+msgid "Nuremberg hours (sunrise/sunset reset)"
+msgstr "Nuremberg hours (sunrise/sunset reset)"
+
+msgid "Núr"
+msgstr "Núr"
+
+msgid "October"
+msgstr "October"
+
+msgid "Open Calendar"
+msgstr "Open Calendar"
+
+msgid "Open selected date in Calendar"
+msgstr "Open selected date in Calendar"
+
+msgid "Optionally shows the same day in another calendar beneath the primary date."
+msgstr "Optionally shows the same day in another calendar beneath the primary date."
+
+msgid "Pachons"
+msgstr "Pachons"
+
+msgid "Payni"
+msgstr "Payni"
+
+msgid "Persian (Solar Hijri)"
+msgstr "Persian (Solar Hijri)"
+
+msgid "Phamenoth"
+msgstr "Phamenoth"
+
+msgid "Phaophi"
+msgstr "Phaophi"
+
+msgid "Pharmouthi"
+msgstr "Pharmouthi"
+
+msgid "Pluviôse"
+msgstr "Pluviôse"
+
+msgid "Positivist"
+msgstr "Positivist"
+
+msgid "Prairial"
+msgstr "Prairial"
+
+msgid "Previous month"
+msgstr "Previous month"
+
+msgid "Previous year"
+msgstr "Previous year"
+
+msgid "Primary calendar"
+msgstr "Primary calendar"
+
+msgid "Qawl"
+msgstr "Qawl"
+
+msgid "Qudrat"
+msgstr "Qudrat"
+
+msgid "Raḥmat"
+msgstr "Raḥmat"
+
+msgid "Revised Julian"
+msgstr "Revised Julian"
+
+msgid "Roman"
+msgstr "Roman"
+
+msgid "Roman temporal time"
+msgstr "Roman temporal time"
+
+msgid "Sahmi"
+msgstr "Sahmi"
+
+msgid "Saint Paul"
+msgstr "Saint Paul"
+
+msgid "Sans-culottides"
+msgstr "Sans-culottides"
+
+msgid "Secondary date"
+msgstr "Secondary date"
+
+msgid "September"
+msgstr "September"
+
+msgid "Set keybinding(s) to show the calendar."
+msgstr "Set keybinding(s) to show the calendar."
+
+msgid "Set your custom format here."
+msgstr "Set your custom format here."
+
+msgid "Set your custom tooltip format here."
+msgstr "Set your custom tooltip format here."
+
+msgid "Shakespeare"
+msgstr "Shakespeare"
+
+msgid "Sharaf"
+msgstr "Sharaf"
+
+msgid "Show calendar"
+msgstr "Show calendar"
+
+msgid "Show calendar events"
+msgstr "Show calendar events"
+
+msgid "Show information on date format syntax"
+msgstr "Show information on date format syntax"
+
+msgid "Show seconds"
+msgstr "Show seconds"
+
+msgid "Show seconds or the closest finer unit supported by the selected time system. Modes with fixed historical or epoch precision ignore this setting."
+msgstr "Show seconds or the closest finer unit supported by the selected time system. Modes with fixed historical or epoch precision ignore this setting."
+
+msgid "Show today"
+msgstr "Show today"
+
+msgid "Show week numbers in calendar"
+msgstr "Show week numbers in calendar"
+
+msgid "Sol"
+msgstr "Sol"
+
+msgid "Standard time (12-hour)"
+msgstr "Standard time (12-hour)"
+
+msgid "Standard time (24-hour)"
+msgstr "Standard time (24-hour)"
+
+msgid "Standard time (follow Mint setting)"
+msgstr "Standard time (follow Mint setting)"
+
+msgid "Sulṭán"
+msgstr "Sulṭán"
+
+msgid "Swedish historical (1700–1753)"
+msgstr "Swedish historical (1700–1753)"
+
+msgid "The Cinnamon clock and calendar with multiple time and calendar systems"
+msgstr "The Cinnamon clock and calendar with multiple time and calendar systems"
+
+msgid "Thermidor"
+msgstr "Thermidor"
+
+msgid "Thoth"
+msgstr "Thoth"
+
+msgid "Traditional Chinese double-hours"
+msgstr "Traditional Chinese double-hours"
+
+msgid "Trē"
+msgstr "Trē"
+
+msgid "Tybi"
+msgstr "Tybi"
+
+#, c-format
+msgid "Uinal %d"
+msgstr "Uinal %d"
+
+msgid "Unable to load GTK 3"
+msgstr "Unable to load GTK 3"
+
+msgid "Unable to open a graphical display."
+msgstr "Unable to open a graphical display."
+
+msgid "Unix time (epoch seconds)"
+msgstr "Unix time (epoch seconds)"
+
+msgid "Use a custom date format"
+msgstr "Use a custom date format"
+
+msgid "Used by Roman temporal, Edo Japanese seasonal, Italian, Babylonian and Nuremberg hours, and Indian ghaṭī time. Enter north latitudes as positive and south latitudes as negative."
+msgstr "Used by Roman temporal, Edo Japanese seasonal, Italian, Babylonian and Nuremberg hours, and Indian ghaṭī time. Enter north latitudes as positive and south latitudes as negative."
+
+msgid "Used by local sidereal, solar and location-dependent historical time. Enter east longitudes as positive and west longitudes as negative."
+msgstr "Used by local sidereal, solar and location-dependent historical time. Enter east longitudes as positive and west longitudes as negative."
+
+msgid "Vendémiaire"
+msgstr "Vendémiaire"
+
+msgid "Ventôse"
+msgstr "Ventôse"
+
+msgid "Website"
+msgstr "Website"
+
+msgid "Week"
+msgstr "Week"
+
+#, c-format
+msgid "Week %02d"
+msgstr "Week %02d"
+
+msgid "World Calendar"
+msgstr "World Calendar"
+
+msgid "Worldsday"
+msgstr "Worldsday"
+
+msgid "Year Day"
+msgstr "Year Day"
+
+msgid "‘Alá’"
+msgstr "‘Alá’"
+
+msgid "‘Aẓamat"
+msgstr "‘Aẓamat"
+
+msgid "‘Ilm"
+msgstr "‘Ilm"
+
+msgid "‘Izzat"
+msgstr "‘Izzat"

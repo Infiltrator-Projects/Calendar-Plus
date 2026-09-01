@@ -1,0 +1,27 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Calendar Plus
+Upstream-Contact: Shannon Smith <infiltratr@yandex.com>
+Source: https://github.com/Infiltrator-Projects/Calendar-Plus
+
+Files: .github/* .gitmodules LICENSE Makefile README.md debian/* src/* tests/* tools/*
+Copyright: 2026 Shannon Smith
+License: GPL-3+
+Comment: Calendar Plus releases from 3.4.0 onward use an independently
+ implemented runtime against Cinnamon public interfaces. Releases through 3.3.0
+ retain their original source notices and copyright metadata.
+
+Files: assets/fonts/mb-corpo-fonts.tar.xz
+Copyright: Not asserted by Calendar Plus
+License: License-not-asserted
+Comment: This is the exact user-supplied MB Corpo binary font archive. Calendar
+ Plus records and verifies it as a separate asset and does not claim authorship
+ of, or relicense, the font programs under the GPL grant for project-owned code.
+
+License: GPL-3+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 3 of the License, or (at your option) any later
+ version.
+ .
+ On Debian systems, the complete text of the GNU General Public License version
+ 3 can be found in /usr/share/common-licenses/GPL-3.

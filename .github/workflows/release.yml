@@ -1,0 +1,276 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+name: publish-release
+
+# Publication is gated by the successful main-branch CI run for an explicit
+# Release commit, so no untested tree can become a GitHub release. Generated
+# translation and runtime-integrity metadata are validated by that CI gate.
+on:
+  workflow_run:
+    workflows: ["build-and-test"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      startsWith(github.event.workflow_run.head_commit.message, 'Release ')
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out approved main commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install release dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential debhelper devscripts gettext gh gobject-introspection gjs jq \
+            gir1.2-glib-2.0-dev libglib2.0-dev libicu-dev nodejs \
+            pkg-config python3 ripgrep lintian shellcheck
+
+      - name: Validate, build and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch origin main --tags
+          head_commit=$(git rev-parse HEAD)
+          main_commit=$(git rev-parse origin/main)
+          if [[ "$head_commit" != "$EXPECTED_SHA" || "$main_commit" != "$EXPECTED_SHA" ]]; then
+            printf 'Release source %s is not exact current main %s.\n' \
+              "$head_commit" "$main_commit" >&2
+            exit 1
+          fi
+          release_subject=$(git log -1 --format=%s "$head_commit")
+          if [[ "$release_subject" != Release\ * ]]; then
+            printf 'Current main is not an explicit Release commit.\n' >&2
+            exit 1
+          fi
+
+          version=$(sed -n 's/^VERSION := //p' Makefile)
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            printf 'Invalid source version: %s\n' "$version" >&2
+            exit 1
+          fi
+          if [[ "$release_subject" != "Release ${version}" && "$release_subject" != "Release ${version}:"* ]]; then
+            printf 'Release commit subject must begin with Release %s.\n' "$version" >&2
+            exit 1
+          fi
+          tag="v${version}"
+
+          make release-check
+
+          deb="dist/calendar-plus_${version}_amd64.deb"
+          installer="dist/calendar-plus-${version}-local-folder.run"
+          test -f "$deb"
+          test -x "$installer"
+
+          notes="${RUNNER_TEMP}/release-notes.md"
+          awk '
+            NR == 1 { next }
+            /^ -- / { exit }
+            {
+              sub(/^  \* /, "- ")
+              print
+            }
+          ' debian/changelog | sed '/^[[:space:]]*$/d' > "$notes"
+          test -s "$notes"
+
+          remote_tag_commit=$(git ls-remote origin "refs/tags/${tag}" | awk '{print $1}')
+          baseline_reset=false
+          if [[ -n "$remote_tag_commit" && "$remote_tag_commit" != "$head_commit" ]]; then
+            if [[ "$version" != "1.0.0" ]]; then
+              printf 'Release tag %s points to %s, not approved commit %s.\n' \
+                "$tag" "$remote_tag_commit" "$head_commit" >&2
+              exit 1
+            fi
+
+            # Calendar Plus 1.0 is an intentional public-history reset. When
+            # main is replaced by the clean 1.0 root commit, re-anchor v1.0.0
+            # to that root and rebuild the release from the clean source tree.
+            baseline_reset=true
+            if gh release view "$tag" >/dev/null 2>&1; then
+              gh release delete "$tag" --yes
+            fi
+            git tag -f "$tag" "$head_commit"
+            git push --force origin "$tag"
+            remote_tag_commit="$head_commit"
+          fi
+          if [[ -z "$remote_tag_commit" ]]; then
+            git tag "$tag" "$head_commit"
+            git push origin "$tag"
+          fi
+
+          # published releases are immutable; reruns verify their exact assets
+          # and continue with repository publication rather than trying to
+          # mutate or recreate the GitHub release.
+          release_was_published=false
+          if release_state=$(gh release view "$tag" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [[ "$release_state" != true ]]; then
+              release_was_published=true
+              printf 'Release %s is already published; verifying immutable assets.\n' "$tag"
+            fi
+          else
+            gh release create "$tag" \
+              --draft \
+              --verify-tag \
+              --target "$head_commit" \
+              --title "Calendar Plus $version" \
+              --notes-file "$notes"
+          fi
+
+          # A failed asset upload leaves a private draft. The next successful
+          # CI run for this exact Release commit replaces both assets and
+          # completes publication without requiring tag deletion. A published
+          # release is never modified; it is only verified below.
+          if [[ "$release_was_published" == false ]]; then
+            gh release upload "$tag" "$deb" "$installer" --clobber
+          fi
+
+          expected_assets=$(printf '%s\n%s\n' \
+            "${deb##*/}" "${installer##*/}" | sort)
+          published_assets=$(gh release view "$tag" --json assets \
+            --jq '.assets[].name' | sort)
+          if [[ "$published_assets" != "$expected_assets" ]]; then
+            printf 'Release %s has an unexpected asset set.\n' "$tag" >&2
+            printf 'Expected:\n%s\nPublished:\n%s\n' \
+              "$expected_assets" "$published_assets" >&2
+            exit 1
+          fi
+
+          release_id=$(gh release view "$tag" --json databaseId --jq .databaseId)
+          release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}")
+          for asset in "$deb" "$installer"; do
+            name="${asset##*/}"
+            local_size=$(stat -c '%s' "$asset")
+            remote_size=$(jq -r --arg name "$name" \
+              '[.assets[] | select(.name == $name) | .size][0] // 0' \
+              <<<"$release_json")
+            if [[ "$remote_size" != "$local_size" ]]; then
+              printf 'Release asset %s has size %s; expected %s.\n' \
+                "$name" "$remote_size" "$local_size" >&2
+              exit 1
+            fi
+
+            local_digest="sha256:$(sha256sum "$asset" | awk '{print $1}')"
+            remote_digest=$(jq -r --arg name "$name" \
+              '[.assets[] | select(.name == $name) | .digest][0] // ""' \
+              <<<"$release_json")
+            if [[ -n "$remote_digest" && "$remote_digest" != "$local_digest" ]]; then
+              printf 'Release asset %s digest mismatch.\n' "$name" >&2
+              exit 1
+            fi
+          done
+
+          if [[ "$release_was_published" == false ]]; then
+            gh release edit "$tag" --draft=false --latest
+          fi
+          published_tag=$(gh release view "$tag" --json tagName --jq .tagName)
+          test "$published_tag" = "$tag"
+
+          if [[ "$version" == "1.0.0" ]]; then
+            while IFS= read -r old_tag; do
+              [[ -z "$old_tag" || "$old_tag" == "$tag" ]] && continue
+              gh release delete "$old_tag" --yes
+            done < <(gh release list --limit 100 --json tagName --jq '.[].tagName')
+
+            while IFS= read -r old_ref; do
+              old_tag=${old_ref#refs/tags/}
+              [[ -z "$old_tag" || "$old_tag" == "$tag" ]] && continue
+              git push origin ":refs/tags/$old_tag"
+            done < <(git ls-remote --refs origin 'refs/tags/*' | awk '{print $2}')
+
+            remaining_release_count=$(gh release list --limit 100 --json tagName --jq 'length')
+            remaining_tag_count=$(git ls-remote --refs origin 'refs/tags/*' | wc -l)
+            remaining_branch_count=$(git ls-remote --heads origin | wc -l)
+            test "$remaining_release_count" -eq 1
+            test "$remaining_tag_count" -eq 1
+            test "$remaining_branch_count" -eq 1
+            test "$(gh release list --limit 100 --json tagName --jq '.[0].tagName')" = "$tag"
+            test "$(git ls-remote --refs origin "refs/tags/${tag}" | awk '{print $1}')" = "$head_commit"
+          fi
+
+      - name: Refresh and verify Infiltrator APT repository
+        env:
+          DISPATCH_TOKEN: ${{ secrets.APT_REPOSITORY_DISPATCH_TOKEN }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+          APP_ID: calendar-plus
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n 's/^VERSION := //p' Makefile)"
+          test -n "$VERSION"
+          payload="$(jq -nc --arg repository "$GITHUB_REPOSITORY" --arg sha "$RELEASE_SHA" \
+            '{event_type:"application-release",client_payload:{repository:$repository,sha:$sha}}')"
+
+          dispatch_ok=false
+          if [[ -n "${DISPATCH_TOKEN:-}" ]]; then
+            api='https://api.github.com/repos/Infiltrator-Projects/Infiltrator-Repository'
+            headers=(
+              --header "Authorization: Bearer $DISPATCH_TOKEN"
+              --header "Accept: application/vnd.github+json"
+              --header "X-GitHub-Api-Version: 2022-11-28"
+            )
+
+            if curl --fail-with-body --silent --show-error \
+              --request POST "${headers[@]}" \
+              --data "$payload" "$api/dispatches"; then
+              dispatch_ok=true
+            else
+              # A fine-grained token may be permitted to dispatch Actions even
+              # when repository metadata access is restricted. Try the explicit
+              # workflow endpoint independently before relying on the schedule.
+              workflow_payload='{"ref":"main"}'
+              if curl --fail-with-body --silent --show-error \
+                --request POST "${headers[@]}" \
+                --data "$workflow_payload" \
+                "$api/actions/workflows/publish.yml/dispatches"; then
+                dispatch_ok=true
+              else
+                echo "::warning::APT dispatch token cannot trigger Infiltrator-Repository; refresh its repository access/Actions permissions."
+              fi
+            fi
+          else
+            echo "::warning::Immediate APT dispatch token is unavailable."
+          fi
+
+          if [[ "$dispatch_ok" != true ]]; then
+            echo "::warning::Immediate APT refresh could not be triggered; waiting for the repository safety refresh."
+          fi
+
+          catalogue='https://infiltrator-projects.github.io/Infiltrator-Repository/catalogue/apps.json'
+          for attempt in $(seq 1 180); do
+            if curl -fsS --retry 2 --retry-delay 1 "$catalogue?release=$RELEASE_SHA&attempt=$attempt" \
+              | jq -e --arg id "$APP_ID" --arg version "$VERSION" \
+                '.[] | select(.id == $id and .version == $version)' >/dev/null; then
+              echo "APT repository advertises $APP_ID $VERSION."
+              exit 0
+            fi
+            echo "Waiting for APT publication of $APP_ID $VERSION ($attempt/180)..."
+            sleep 10
+          done
+
+          echo "::error::GitHub release was published, but the central APT repository did not advertise $APP_ID $VERSION within 30 minutes."
+          exit 1

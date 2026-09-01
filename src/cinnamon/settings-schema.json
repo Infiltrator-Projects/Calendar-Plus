@@ -1,0 +1,204 @@
+{
+    "clock-section": {
+        "type": "section",
+        "description": "Clock"
+    },
+    "clock-mode": {
+        "type": "combobox",
+        "default": "standard",
+        "description": "Clock mode",
+        "options": {
+            "Standard time (follow Mint setting)": "standard",
+            "Standard time (24-hour)": "standard-24",
+            "Standard time (12-hour)": "standard-12",
+            "Internet Time (@000 to @999)": "internet",
+            "Unix time (epoch seconds)": "unix",
+            "Binary clock": "binary",
+            "Hexadecimal time (0000 to FFFF)": "hexadecimal",
+            "Astronomical Julian Date (JD)": "julian",
+            "Modified Julian Date (MJD)": "modified-julian",
+            "Local sidereal time": "sidereal",
+            "Apparent solar time": "solar",
+            "Local mean solar time": "mean-solar",
+            "French Republican decimal time (10-hour day)": "decimal",
+            "Traditional Chinese double-hours": "chinese-time",
+            "Chinese hundred-kè time": "chinese-ke",
+            "Roman temporal time": "roman-temporal",
+            "Edo Japanese seasonal time": "japanese-temporal",
+            "Italian hours (from sunset)": "italian-hours",
+            "Babylonian hours (from sunrise)": "babylonian-hours",
+            "Indian ghaṭī time (from sunrise)": "indian-ghati",
+            "Nuremberg hours (sunrise/sunset reset)": "nuremberg-hours"
+        },
+        "tooltip": "Choose the time system displayed in the Cinnamon panel."
+    },
+    "show-seconds": {
+        "type": "switch",
+        "default": false,
+        "description": "Show seconds",
+        "tooltip": "Show seconds or the closest finer unit supported by the selected time system. Modes with fixed historical or epoch precision ignore this setting."
+    },
+    "location-section": {
+        "type": "section",
+        "description": "Geographic location"
+    },
+    "location-configured": {
+        "type": "switch",
+        "default": false,
+        "description": "Geographic location"
+    },
+    "latitude": {
+        "type": "spinbutton",
+        "default": 0,
+        "min": -90,
+        "max": 90,
+        "step": 0.01,
+        "description": "Latitude in degrees",
+        "tooltip": "Used by Roman temporal, Edo Japanese seasonal, Italian, Babylonian and Nuremberg hours, and Indian ghaṭī time. Enter north latitudes as positive and south latitudes as negative.",
+        "dependency": "location-configured"
+    },
+    "longitude": {
+        "type": "spinbutton",
+        "default": 0,
+        "min": -180,
+        "max": 180,
+        "step": 0.01,
+        "description": "Longitude in degrees",
+        "tooltip": "Used by local sidereal, solar and location-dependent historical time. Enter east longitudes as positive and west longitudes as negative.",
+        "dependency": "location-configured"
+    },
+    "calendar-section": {
+        "type": "section",
+        "description": "Calendar systems"
+    },
+    "primary-calendar": {
+        "type": "combobox",
+        "default": "gregorian",
+        "description": "Primary calendar",
+        "options": {
+            "Gregorian": "gregorian",
+            "ISO week calendar": "iso-week",
+            "Julian": "julian",
+            "Revised Julian": "revised-julian",
+            "Hebrew": "hebrew",
+            "Islamic (Umm al-Qura)": "islamic-umalqura",
+            "Islamic (civil/tabular)": "islamic-civil",
+            "Islamic (tabular, astronomical epoch)": "islamic-tbla",
+            "Islamic (astronomical approximation)": "islamic",
+            "Persian (Solar Hijri)": "persian",
+            "Bahá’í (Badíʿ)": "bahai",
+            "Buddhist": "buddhist",
+            "Coptic": "coptic",
+            "Ethiopian": "ethiopian",
+            "Ethiopic (Amete Alem)": "ethiopic-amete-alem",
+            "Chinese traditional": "chinese",
+            "Dangi (traditional Korean)": "dangi",
+            "Indian National (Saka)": "indian",
+            "Japanese imperial era": "japanese",
+            "Minguo (Republic of China)": "minguo",
+            "Roman": "roman",
+            "Byzantine (Anno Mundi)": "byzantine",
+            "Egyptian civil (Nabonassar era)": "egyptian-nabonassar",
+            "Armenian traditional (365-day)": "armenian-traditional",
+            "Mayan Long Count": "mayan",
+            "French Republican": "french-republican",
+            "Swedish historical (1700–1753)": "swedish-historical",
+            "International Fixed": "international-fixed",
+            "World Calendar": "world",
+            "Positivist": "positivist"
+        },
+        "tooltip": "Controls the popup calendar grid, date heading and calendar navigation. Events remain attached to their original dates."
+    },
+    "secondary-calendar": {
+        "type": "combobox",
+        "default": "none",
+        "description": "Secondary date",
+        "options": {
+            "None": "none",
+            "Gregorian": "gregorian",
+            "ISO week calendar": "iso-week",
+            "Julian": "julian",
+            "Revised Julian": "revised-julian",
+            "Hebrew": "hebrew",
+            "Islamic (Umm al-Qura)": "islamic-umalqura",
+            "Islamic (civil/tabular)": "islamic-civil",
+            "Islamic (tabular, astronomical epoch)": "islamic-tbla",
+            "Islamic (astronomical approximation)": "islamic",
+            "Persian (Solar Hijri)": "persian",
+            "Bahá’í (Badíʿ)": "bahai",
+            "Buddhist": "buddhist",
+            "Coptic": "coptic",
+            "Ethiopian": "ethiopian",
+            "Ethiopic (Amete Alem)": "ethiopic-amete-alem",
+            "Chinese traditional": "chinese",
+            "Dangi (traditional Korean)": "dangi",
+            "Indian National (Saka)": "indian",
+            "Japanese imperial era": "japanese",
+            "Minguo (Republic of China)": "minguo",
+            "Roman": "roman",
+            "Byzantine (Anno Mundi)": "byzantine",
+            "Egyptian civil (Nabonassar era)": "egyptian-nabonassar",
+            "Armenian traditional (365-day)": "armenian-traditional",
+            "Mayan Long Count": "mayan",
+            "French Republican": "french-republican",
+            "Swedish historical (1700–1753)": "swedish-historical",
+            "International Fixed": "international-fixed",
+            "World Calendar": "world",
+            "Positivist": "positivist"
+        },
+        "tooltip": "Optionally shows the same day in another calendar beneath the primary date."
+    },
+    "section1": {
+        "type": "section",
+        "description": "Display"
+    },
+    "show-events": {
+        "type": "switch",
+        "default": true,
+        "description": "Show calendar events",
+        "tooltip": "Check this to display events in the calendar."
+    },
+    "show-week-numbers": {
+        "type": "switch",
+        "default": false,
+        "description": "Show week numbers in calendar",
+        "tooltip": "Check this to show week numbers in the calendar."
+    },
+    "use-custom-format": {
+        "type": "switch",
+        "default": false,
+        "description": "Use a custom date format",
+        "tooltip": "Check this to define a custom format for the date in the calendar applet."
+    },
+    "custom-format": {
+        "type": "entry",
+        "default": "%A, %B %e, %H:%M",
+        "description": "Date format",
+        "dependency": "use-custom-format",
+        "tooltip": "Set your custom format here."
+    },
+    "custom-tooltip-format": {
+        "type": "entry",
+        "default": "%A, %B %e, %H:%M",
+        "description": "Date format for tooltip",
+        "dependency": "use-custom-format",
+        "tooltip": "Set your custom tooltip format here."
+    },
+    "format-button": {
+        "type": "button",
+        "description": "Show information on date format syntax",
+        "dependency": "use-custom-format",
+        "callback": "on_custom_format_button_pressed",
+        "tooltip": "Click this button to know more about the syntax for date formats."
+    },
+    "section2": {
+        "type": "section",
+        "description": "Keyboard shortcuts"
+    },
+    "keyOpen": {
+        "type": "keybinding",
+        "description": "Show calendar",
+        "default": "<Super>c",
+        "tooltip": "Set keybinding(s) to show the calendar."
+    }
+}

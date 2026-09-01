@@ -1,0 +1,38 @@
+# Build and packaging outputs
+build/
+build-*/
+dist/
+coverage/
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+*.o
+*.a
+*.so
+*.so.*
+*.gcda
+*.gcno
+*.gcov
+*.deb
+*.build
+*.buildinfo
+*.changes
+
+debian/.debhelper/
+debian/calendar-plus/
+debian/files
+debian/*.debhelper.log
+debian/*.substvars
+
+# Generated language/runtime caches
+__pycache__/
+*.py[cod]
+node_modules/
+*.mo
+
+# Local editor and operating-system debris
+.DS_Store
+*~
+*.swp
+*.swo
+*.tmp

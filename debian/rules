@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Shannon Smith
+
+CALENDAR_PLUS_BUILD_MODE ?= generic
+export CALENDAR_PLUS_BUILD_MODE
+
+ifeq ($(CALENDAR_PLUS_BUILD_MODE),native)
+DEB_BUILD_MAINT_OPTIONS := optimize=+lto
+else
+DEB_BUILD_MAINT_OPTIONS := optimize=-lto
+endif
+export DEB_BUILD_MAINT_OPTIONS
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	$(MAKE) BUILD_MODE=$(CALENDAR_PLUS_BUILD_MODE) all
+
+override_dh_auto_test:
+	$(MAKE) BUILD_MODE=$(CALENDAR_PLUS_BUILD_MODE) \
+		test validate-js validate-translations validate-sources \
+		validate-package-inputs validate-release-model validate-architecture \
+		validate-exports validate-abi validate-runtime-deps smoke-gjs
+
+override_dh_auto_clean:
+	$(MAKE) clean
+
+override_dh_auto_install:
+	$(MAKE) BUILD_MODE=$(CALENDAR_PLUS_BUILD_MODE) install \
+		'DESTDIR=$(CURDIR)/debian/calendar-plus' PREFIX=/usr

@@ -1,0 +1,10 @@
+{
+    "repository": "linuxmint/cinnamon",
+    "ref": "master",
+    "commit": "3853a79a175d3ddec028d1877b6c46d9450558d4",
+    "paths": [
+        "files/usr/share/cinnamon/applets/calendar@cinnamon.org/",
+        "calendar-server/",
+        "js/misc/loginManager.js"
+    ]
+}
