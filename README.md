@@ -6,7 +6,7 @@
 
 Calendar Plus is a native Cinnamon panel clock and calendar with alternative clock modes, 30 selectable calendar systems and CalendarServer integration.
 
-**Stable release:** 1.0.1.
+**Stable release:** 1.0.2.
 
 **Runtime:** Cinnamon 6.4, 6.6 and 6.7.
 
@@ -20,7 +20,7 @@ Primary and optional secondary dates include Gregorian, Julian, ISO week, Hebrew
 
 The applet has its own seconds preference, can coexist with Cinnamon's stock Calendar applet and installs no project-owned daemon, polling service or autostart entry.
 
-Calendar Plus uses the three supplied MB Corpo faces throughout its owned interface: MB Corpo S Regular for normal UI text, MB Corpo S Bold for emphasis and actions, and MB Corpo A Condensed Regular for clock/title display. Every build verifies the exact font archive and each extracted font before packaging or installation.
+Calendar Plus uses the three supplied MB Corpo faces throughout its owned interface: MB Corpo S Regular for normal UI text, MB Corpo S Bold for emphasis, actions and the panel clock, and MB Corpo A Condensed Regular for condensed title display. Every build verifies the exact font archive and each extracted font before packaging or installation.
 
 Location-dependent clocks do not silently assume Greenwich. They show `N/A LOC` until **Geographic location** is enabled and coordinates are supplied. Existing non-zero coordinates from older releases are migrated automatically; a genuine 0°, 0° location can now be selected explicitly.
 
