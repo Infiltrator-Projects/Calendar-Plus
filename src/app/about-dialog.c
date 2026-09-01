@@ -6,7 +6,6 @@
 #include <libintl.h>
 #include <locale.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "project-info.h"
 
@@ -170,9 +169,9 @@ print_metadata(void)
 static const gchar *
 build_label(const gchar *profile)
 {
-    if (profile != NULL && strcmp(profile, "native") == 0)
+    if (infiltratr_string_equal(profile, "native"))
         return "Native / local machine compile";
-    if (profile != NULL && strcmp(profile, "generic") == 0)
+    if (infiltratr_string_equal(profile, "generic"))
         return "Generic / APT package";
     return "Source / development build";
 }
@@ -224,7 +223,7 @@ main(int argc,
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
     textdomain(GETTEXT_PACKAGE);
 
-    if (argc == 2 && strcmp(argv[1], "--print-metadata") == 0)
+    if (argc == 2 && infiltratr_string_equal(argv[1], "--print-metadata"))
     {
         print_metadata();
         return 0;
