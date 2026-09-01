@@ -112,9 +112,9 @@ calendar_plus_french_fields_from_jdn(
     g_return_if_fail(fields != NULL);
 
     while (jdn < french_year_start(year))
-        year--;
+        year = calendar_plus_i64_subtract_saturating(year, 1);
     while (jdn >= french_year_start(calendar_plus_i64_add_saturating(year, 1)))
-        year++;
+        year = calendar_plus_i64_add_saturating(year, 1);
 
     start = french_year_start(year);
     day_of_year = (gint)(jdn - start);
