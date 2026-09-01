@@ -119,12 +119,13 @@ modern_naw_ruz_jdn(gint gregorian_year)
     const gint64 unix_microseconds = (gint64)llroundl(
         (jd_utc - JULIAN_DATE_UNIX_EPOCH) *
         SECONDS_PER_DAY * G_USEC_PER_SEC);
-    const gint64 local_microseconds =
-        unix_microseconds +
-        (gint64)TEHRAN_UTC_OFFSET_SECONDS * G_USEC_PER_SEC;
-    const gint64 tehran_civil_jdn =
-        floor_divide(local_microseconds, MICROSECONDS_PER_DAY) +
-        CALENDAR_PLUS_UNIX_EPOCH_JDN;
+    const gint64 local_microseconds = calendar_plus_i64_add_saturating(
+        unix_microseconds,
+        calendar_plus_i64_multiply_saturating(
+            TEHRAN_UTC_OFFSET_SECONDS, G_USEC_PER_SEC));
+    const gint64 tehran_civil_jdn = calendar_plus_i64_add_saturating(
+        floor_divide(local_microseconds, MICROSECONDS_PER_DAY),
+        CALENDAR_PLUS_UNIX_EPOCH_JDN);
     long double dawn = 0.0L;
     long double dusk = 0.0L;
     const long double apparent =
@@ -138,14 +139,14 @@ modern_naw_ruz_jdn(gint gregorian_year)
     }
 
     (void)dawn;
-    return apparent < dusk ? tehran_civil_jdn : tehran_civil_jdn + 1;
+    return apparent < dusk ? tehran_civil_jdn : calendar_plus_i64_add_saturating(tehran_civil_jdn, 1);
 }
 
 static gint64
 bahai_year_start_jdn(gint64 bahai_year)
 {
-    const gint64 gregorian_year =
-        bahai_year + BAHAI_TO_GREGORIAN_YEAR_OFFSET;
+    const gint64 gregorian_year = calendar_plus_i64_add_saturating(
+        bahai_year, BAHAI_TO_GREGORIAN_YEAR_OFFSET);
 
     if (bahai_year >= MODERN_BAHAI_FIRST_YEAR &&
         gregorian_year >= 1000 && gregorian_year <= 3000)
@@ -162,8 +163,12 @@ bahai_year_start_jdn(gint64 bahai_year)
 gint
 calendar_plus_bahai_intercalary_days(gint64 bahai_year)
 {
-    return (gint)(bahai_year_start_jdn(bahai_year + 1) -
-                  bahai_year_start_jdn(bahai_year) - 361);
+    return (gint)calendar_plus_i64_subtract_saturating(
+        calendar_plus_i64_subtract_saturating(
+            bahai_year_start_jdn(
+                calendar_plus_i64_add_saturating(bahai_year, 1)),
+            bahai_year_start_jdn(bahai_year)),
+        361);
 }
 
 void
@@ -190,17 +195,20 @@ calendar_plus_bahai_fields_from_jdn(
     start = bahai_year_start_jdn(bahai_year);
     if (jdn < start)
     {
-        bahai_year--;
+        bahai_year = calendar_plus_i64_subtract_saturating(
+            bahai_year, 1);
         start = bahai_year_start_jdn(bahai_year);
     }
-    else if (jdn >= bahai_year_start_jdn(bahai_year + 1))
+    else if (jdn >= bahai_year_start_jdn(calendar_plus_i64_add_saturating(bahai_year, 1)))
     {
-        bahai_year++;
+        bahai_year = calendar_plus_i64_add_saturating(
+            bahai_year, 1);
         start = bahai_year_start_jdn(bahai_year);
     }
 
     fields->year = bahai_year;
-    day_index = (gint)(jdn - start);
+    day_index = (gint)calendar_plus_i64_subtract_saturating(
+        jdn, start);
     intercalary = calendar_plus_bahai_intercalary_days(bahai_year);
 
     if (day_index < 18 * 19)
@@ -262,5 +270,7 @@ calendar_plus_bahai_fields_to_jdn(
     else
         offset = 18 * 19 + calendar_plus_bahai_intercalary_days(fields->year);
 
-    return start + offset + fields->day - 1;
+    return calendar_plus_i64_add_saturating(
+        calendar_plus_i64_add_saturating(start, offset),
+        fields->day - 1);
 }
