@@ -12,8 +12,8 @@
  */
 
 #include "time-astronomy.h"
+#include "integer-math.h"
 
-#include <infiltratr/arithmetic.h>
 #include <infiltratr/core.h>
 #include <math.h>
 
@@ -27,28 +27,6 @@ enum
 };
 
 #define MICROSECONDS_PER_DAY ((gint64)SECONDS_PER_DAY * G_USEC_PER_SEC)
-
-static gint64
-floor_divide(gint64 value,
-             gint64 divisor)
-{
-    int64_t quotient = 0;
-
-    g_return_val_if_fail(
-        infiltratr_i64_floor_divmod(value, divisor, &quotient, NULL), 0);
-    return quotient;
-}
-
-static gint64
-positive_modulo(gint64 value,
-                gint64 modulus)
-{
-    int64_t remainder = 0;
-
-    g_return_val_if_fail(
-        infiltratr_i64_floor_divmod(value, modulus, NULL, &remainder), 0);
-    return remainder;
-}
 
 static gdouble
 normalise_longitude(gdouble longitude)
@@ -80,7 +58,7 @@ solar_terms(gint64 unix_microseconds,
             gdouble *declination_radians)
 {
     const gint64 unix_seconds =
-        floor_divide(unix_microseconds, G_USEC_PER_SEC);
+        calendar_plus_floor_divide(unix_microseconds, G_USEC_PER_SEC);
     g_autoptr(GDateTime) utc = g_date_time_new_from_unix_utc(unix_seconds);
     gdouble fractional_hour;
     gdouble gamma;
@@ -154,7 +132,7 @@ calendar_plus_mean_solar_seconds(gint64 unix_microseconds,
                                  gdouble longitude)
 {
     const gint64 utc_microseconds =
-        positive_modulo(unix_microseconds, MICROSECONDS_PER_DAY);
+        calendar_plus_positive_modulo(unix_microseconds, MICROSECONDS_PER_DAY);
     long double seconds =
         (long double)utc_microseconds / G_USEC_PER_SEC +
         normalise_longitude(longitude) * 240.0L;
@@ -280,9 +258,11 @@ calendar_plus_solar_boundary_instants(gint64 unix_microseconds,
         return FALSE;
     }
 
-    day_index = floor_divide(unix_microseconds, MICROSECONDS_PER_DAY);
-    day_start = day_index * MICROSECONDS_PER_DAY;
-    noon = day_start + MICROSECONDS_PER_DAY / 2;
+    day_index = calendar_plus_floor_divide(unix_microseconds, MICROSECONDS_PER_DAY);
+    day_start = calendar_plus_i64_multiply_saturating(
+        day_index, MICROSECONDS_PER_DAY);
+    noon = calendar_plus_i64_add_saturating(
+        day_start, MICROSECONDS_PER_DAY / 2);
 
     if (!solar_terms(noon, &equation_minutes, &declination))
         return FALSE;
