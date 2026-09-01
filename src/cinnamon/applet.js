@@ -46,7 +46,7 @@ const FONT_UI_REGULAR =
 const FONT_UI_BOLD =
     'font-family: "MB Corpo S Title WEB"; font-weight: 700;';
 const FONT_DISPLAY =
-    'font-family: "MB Corpo A Title Cond WEB"; font-weight: 400;';
+    'font-family: "MB Corpo S Title WEB"; font-weight: 700;';
 
 function _applyTypography(actor, style) {
     if (actor && typeof actor.set_style === "function") {
