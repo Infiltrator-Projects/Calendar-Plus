@@ -36,6 +36,13 @@ calendar_plus_i64_add_saturating(int64_t left,
 }
 
 static inline int64_t
+calendar_plus_i64_subtract_saturating(int64_t left,
+                                      int64_t right)
+{
+    return infiltratr_i64_subtract_saturating(left, right);
+}
+
+static inline int64_t
 calendar_plus_i64_multiply_saturating(int64_t left,
                                       int64_t right)
 {
