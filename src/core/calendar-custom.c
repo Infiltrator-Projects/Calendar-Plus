@@ -282,7 +282,7 @@ format_roman(const CalendarFields *fields,
     if (part == CALENDAR_PLUS_DATE_PART_MONTH)
         return g_strdup(_(roman_months[fields->month]));
     if (part == CALENDAR_PLUS_DATE_PART_YEAR)
-        return calendar_plus_roman_number(fields->year + 753);
+        return calendar_plus_roman_number(\n            calendar_plus_i64_add_saturating(fields->year, 753));
 
     return calendar_plus_roman_format_date(fields);
 }
