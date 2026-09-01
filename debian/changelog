@@ -1,3 +1,12 @@
+calendar-plus (1.0.2) trixie; urgency=medium
+
+  * Switch the Cinnamon panel clock from MB Corpo A Condensed Regular to the
+    bundled MB Corpo S Bold face for substantially better panel legibility.
+  * Keep condensed MB Corpo A typography for title/display roles where its
+    narrower shape is useful rather than forcing it onto the tiny panel clock.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Wed, 02 Sep 2026 08:21:00 +1000
+
 calendar-plus (1.0.1) trixie; urgency=medium
 
   * Move remaining generic string and UTF-8 validation mechanics onto
