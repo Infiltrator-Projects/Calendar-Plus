@@ -6,7 +6,7 @@
 
 Calendar Plus is a native Cinnamon panel clock and calendar with alternative clock modes, 30 selectable calendar systems and CalendarServer integration.
 
-**Stable release:** 1.0.4.
+**Stable release:** 1.0.5.
 
 **Runtime:** Cinnamon 6.4, 6.6 and 6.7.
 
