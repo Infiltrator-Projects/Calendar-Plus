@@ -1,3 +1,12 @@
+calendar-plus (1.0.5) trixie; urgency=medium
+
+  * Rebuild and republish the current qualified source as part of the coordinated
+    full-project release refresh.
+  * Preserve the 1.0.4 historical-calendar, provenance and packaging fixes
+    unchanged.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Wed, 02 Sep 2026 21:07:00 +1000
+
 calendar-plus (1.0.4) trixie; urgency=medium
 
   * Correct Roman bissextile reckoning so Julian leap years duplicate the
