@@ -82,7 +82,7 @@ def main() -> None:
     assert "xlet-settings.py" in read("src/cinnamon/settings.py")
     assert "MB Corpo S Title WEB" in read("src/app/about-dialog.c")
     assert "MB Corpo A Title Cond WEB" in read("src/app/about-dialog.c")
-    assert "fontconfig," in read("debian/control")
+    assert "fontconfig," not in read("debian/control")
     assert "libinfiltratr-common.a" in makefile
     assert "src/vendor/infiltratr-common" in makefile
     assert (

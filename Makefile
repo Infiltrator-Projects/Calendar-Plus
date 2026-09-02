@@ -9,7 +9,7 @@ G_IR_COMPILER ?= g-ir-compiler
 PREFIX ?= /usr
 DESTDIR ?=
 
-VERSION := 1.0.3
+VERSION := 1.0.4
 UUID := calendar-plus@the-infiltratr
 APPLET_SRC_DIR := src/cinnamon
 I18N_DIR := src/i18n

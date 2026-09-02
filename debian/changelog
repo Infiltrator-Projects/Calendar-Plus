@@ -1,3 +1,21 @@
+calendar-plus (1.0.4) trixie; urgency=medium
+
+  * Correct Roman bissextile reckoning so Julian leap years duplicate the
+    sixth day before the Kalends of March instead of treating the extra day as
+    an ordinary modern-style February 29 in Roman notation.
+  * Add regression vectors for the complete late-February bissextile boundary.
+  * Retain Linux Mint/Cinnamon provenance explicitly for the derived settings
+    schema while keeping the independently implemented runtime separately
+    attributed.
+  * Stop redistributing unlicensed proprietary MB Corpo font binaries; the UI
+    still prefers locally installed MB Corpo faces and otherwise uses normal
+    Cinnamon/GTK font fallback.
+  * Remove the completed one-time 1.0 history-reset machinery from publishing.
+  * Remove the broken cross-repository PAT dispatch dependency and verify APT
+    publication through the central repository's independent safety refresh.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Wed, 02 Sep 2026 11:08:51 +1000
+
 calendar-plus (1.0.3) trixie; urgency=medium
 
   * Replace the panel clock's heavy MB Corpo S Bold treatment with the bundled
