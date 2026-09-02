@@ -40,12 +40,7 @@ test -f \
 test -x "$TMP/native/usr/libexec/calendar-plus-about"
 test -f "$TMP/native/usr/share/cinnamon/applets/calendar-plus@the-infiltratr/stylesheet.css"
 test -x "$TMP/native/usr/share/cinnamon/applets/calendar-plus@the-infiltratr/settings.py"
-for font in \
-    mb_corpo_a_cond_regular.ttf \
-    mb_corpo_s_bold.ttf \
-    mb_corpo_s_regular.ttf; do
-    test -f "$TMP/native/usr/share/fonts/truetype/calendar-plus/$font"
-done
+test ! -e "$TMP/native/usr/share/fonts/truetype/calendar-plus"
 test -f \
     "$TMP/native/usr/share/locale/en_AU/LC_MESSAGES/calendar-plus@the-infiltratr.mo"
 "$TMP/native/usr/libexec/calendar-plus-about" --print-metadata |
