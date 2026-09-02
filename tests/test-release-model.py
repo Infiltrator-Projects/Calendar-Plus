@@ -70,10 +70,11 @@ def main() -> None:
     assert "MB Corpo S Title WEB" in stylesheet
     assert '.calendar-plus-panel-clock {' in stylesheet
     assert 'font-family: "MB Corpo S Title WEB";' in stylesheet
-    assert "font-weight: 700;" in stylesheet
+    assert "font-weight: 400;" in stylesheet
+    assert "font-size: 1.08em;" in stylesheet
     applet = read("src/cinnamon/applet.js")
     assert "FONT_PANEL_CLOCK" in applet
-    assert 'font-family: "MB Corpo S Title WEB"; font-weight: 700;' in applet
+    assert 'font-family: "MB Corpo S Title WEB"; font-weight: 400; font-size: 1.08em;' in applet
     assert "MB Corpo S Title WEB" in read("src/cinnamon/settings.py")
     assert "xlet-settings.py" in read("src/cinnamon/settings.py")
     assert "MB Corpo S Title WEB" in read("src/app/about-dialog.c")
