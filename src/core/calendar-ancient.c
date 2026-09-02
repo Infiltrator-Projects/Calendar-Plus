@@ -157,6 +157,7 @@ calendar_plus_roman_format_date(
     gint count = 1;
     gint target_month;
     gint64 target_year;
+    gboolean bissextile = FALSE;
     g_autofree gchar *count_roman = NULL;
     g_autofree gchar *year_roman = NULL;
 
@@ -199,12 +200,27 @@ calendar_plus_roman_format_date(
     {
         marker = "Kal.";
         /*
-         * Roman dates count both the current day and the target Kalends; the
-         * +2 is therefore intentional inclusive counting, not an off-by-one.
+         * Caesar's Julian leap day doubled the sixth day before the Kalends
+         * of March.  With modern sequential Julian day numbers, 24 February
+         * is the inserted bissextile VI and 25 February is the ordinary VI;
+         * V, IV, III and pridie then follow unchanged.
          */
-        count =
-            calendar_plus_julian_month_length(fields->year, fields->month) -
-            fields->day + 2;
+        if (fields->month == 2 && fields->day == 24 &&
+            calendar_plus_julian_month_length(fields->year, 2) == 29)
+        {
+            count = 6;
+            bissextile = TRUE;
+        }
+        else
+        {
+            /*
+             * Roman dates count both the current day and the target Kalends;
+             * the +2 is intentional inclusive counting.
+             */
+            count =
+                calendar_plus_julian_month_length(fields->year, fields->month) -
+                fields->day + 2;
+        }
         target_month++;
         if (target_month > 12)
         {
@@ -213,6 +229,16 @@ calendar_plus_roman_format_date(
             g_clear_pointer(&year_roman, g_free);
             year_roman = calendar_plus_roman_number(calendar_plus_i64_add_saturating(target_year, 753));
         }
+    }
+
+    if (bissextile)
+    {
+        count_roman = calendar_plus_roman_number(count);
+        return g_strdup_printf("a.d. bis %s %s %s, %s A.U.C.",
+                               count_roman,
+                               marker,
+                               roman_month_abbreviations[target_month],
+                               year_roman);
     }
 
     if (count == 1)

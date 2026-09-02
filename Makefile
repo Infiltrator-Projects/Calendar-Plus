@@ -15,8 +15,6 @@ APPLET_SRC_DIR := src/cinnamon
 I18N_DIR := src/i18n
 BUILD_DIR := build
 DIST_DIR := dist
-FONT_ARCHIVE := assets/fonts/mb-corpo-fonts.tar.xz
-FONT_BUILD_DIR := $(BUILD_DIR)/fonts
 INFILTRATR_COMMON_DIR := src/vendor/infiltratr-common
 INFILTRATR_COMMON_URL := https://github.com/Infiltrator-Projects/Infiltrator-Libraries.git
 INFILTRATR_COMMON_COMMIT := 0ac7b8a7ff202b8b0360da2c68c0c145b42d1a71
@@ -168,7 +166,6 @@ COVERAGE_MIN_BRANCHES ?= 60
 DIST_FILES := \
 	.github \
 	.gitmodules \
-	assets \
 	LICENSE \
 	Makefile \
 	README.md \
@@ -177,7 +174,7 @@ DIST_FILES := \
 	tests \
 	tools
 
-.PHONY: all check check-deps clean common-bootstrap common-build common-check common-test core-check coverage fonts install package-source \
+.PHONY: all check check-deps clean common-bootstrap common-build common-check common-test core-check coverage install package-source \
 	package-local-installer \
 	sanitize static-analysis test validate-architecture validate-js validate-package-inputs \
 	validate-sources validate-exports validate-abi validate-runtime-deps validate-release-model smoke-gjs \
@@ -185,7 +182,7 @@ DIST_FILES := \
 	reproducible-build translations update-pot validate-translations \
 	update-settings validate-settings-generated update-runtime-hashes
 
-all: fonts common-check check-deps \
+all: common-check check-deps \
 	$(INFILTRATR_COMMON_ARCHIVE) \
 	$(CORE_ARCHIVE) \
 	$(BUILD_DIR)/$(LIB_REALNAME) \
@@ -226,8 +223,6 @@ common-check:
 			echo "Infiltratr Common must be pinned to $(INFILTRATR_COMMON_COMMIT)." >&2; \
 			exit 1; \
 		fi
-fonts:
-	python3 tools/prepare-fonts.py --archive "$(FONT_ARCHIVE)" --output "$(FONT_BUILD_DIR)"
 
 check-deps: common-check
 	@command -v "$(PKG_CONFIG)" >/dev/null || { \
@@ -539,9 +534,6 @@ install: all
 		"$(DESTDIR)$(LIBDIR)/girepository-1.0/$(GIR).typelib"
 	install -Dm755 "$(BUILD_DIR)/$(ABOUT_BINARY)" \
 		"$(DESTDIR)$(PREFIX)/libexec/$(ABOUT_BINARY)"
-	install -d "$(DESTDIR)$(PREFIX)/share/fonts/truetype/calendar-plus"
-	install -m644 "$(FONT_BUILD_DIR)"/*.ttf \
-		"$(DESTDIR)$(PREFIX)/share/fonts/truetype/calendar-plus/"
 	install -d \
 		"$(DESTDIR)$(PREFIX)/share/cinnamon/applets/$(UUID)"
 	install -m644 "$(APPLET_SRC_DIR)"/*.js "$(APPLET_SRC_DIR)"/*.json \

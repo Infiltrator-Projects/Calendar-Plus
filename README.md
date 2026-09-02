@@ -20,7 +20,7 @@ Primary and optional secondary dates include Gregorian, Julian, ISO week, Hebrew
 
 The applet has its own seconds preference, can coexist with Cinnamon's stock Calendar applet and installs no project-owned daemon, polling service or autostart entry.
 
-Calendar Plus uses the three supplied MB Corpo faces throughout its owned interface: MB Corpo S Regular for normal UI text and the slightly enlarged panel clock, MB Corpo S Bold for emphasis and actions, and MB Corpo A Condensed Regular for condensed title display. Every build verifies the exact font archive and each extracted font before packaging or installation.
+Calendar Plus prefers the MB Corpo family throughout its owned interface when those fonts are already installed on the host: MB Corpo S Regular for normal UI text and the slightly enlarged panel clock, MB Corpo S Bold for emphasis and actions, and MB Corpo A Condensed Regular for condensed title display. Calendar Plus does not redistribute proprietary MB Corpo font binaries; when they are unavailable Cinnamon/GTK font fallback is used automatically.
 
 Location-dependent clocks do not silently assume Greenwich. They show `N/A LOC` until **Geographic location** is enabled and coordinates are supplied. Existing non-zero coordinates from older releases are migrated automatically; a genuine 0°, 0° location can now be selected explicitly.
 
@@ -85,7 +85,7 @@ For an installed Cinnamon session, `tools/cinnamon-smoke.sh` verifies installed 
 
 A scheduled `upstream-calendar-drift` workflow watches Cinnamon's stock calendar applet, CalendarServer and resume integration. It does not import upstream code: it fails only when the reviewed upstream surface changes so Calendar Plus can assess relevant compatibility fixes deliberately.
 
-Release publication asks the central Infiltrator APT repository to refresh immediately and verifies the published catalogue. If cross-repository dispatch is unavailable, Calendar Plus waits for the repository safety schedule; the central repository detects when that scheduled refresh advances Calendar Plus and still runs its Linux Mint 22.3 lifecycle qualification for the newly published version.
+Release publication verifies the central Infiltrator APT catalogue and waits for its five-minute safety refresh when required. The central repository detects when that refresh advances Calendar Plus and runs its Linux Mint 22.3 lifecycle qualification for the newly published version. This avoids depending on a separately scoped cross-repository personal access token.
 
 ## Install and releases
 

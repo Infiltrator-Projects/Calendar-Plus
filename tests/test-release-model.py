@@ -59,10 +59,13 @@ def main() -> None:
     assert "--exclude-vcs" not in read("tools/reproducible-build.sh")
     assert "calendar-plus-$(VERSION)-local-folder.run" in makefile
     assert "calendar-plus-about" in makefile
-    assert "FONT_ARCHIVE := assets/fonts/mb-corpo-fonts.tar.xz" in makefile
-    assert "python3 tools/prepare-fonts.py" in makefile
-    assert (ROOT / "assets/fonts/mb-corpo-fonts.tar.xz").is_file()
-    assert (ROOT / "tools/prepare-fonts.py").is_file()
+    assert "FONT_ARCHIVE :=" not in makefile
+    assert "prepare-fonts.py" not in makefile
+    assert not (ROOT / "assets/fonts/mb-corpo-fonts.tar.xz").exists()
+    assert not (ROOT / "tools/prepare-fonts.py").exists()
+    assert "does not redistribute proprietary MB Corpo font binaries" in read("README.md")
+    assert "Files: src/cinnamon/settings-schema.json" in read("debian/copyright")
+    assert "Linux Mint Project and Cinnamon contributors" in read("debian/copyright")
     assert "MB Corpo S Title WEB" in read("src/cinnamon/applet.js")
     assert "calendar-plus-popup" in read("src/cinnamon/applet.js")
     assert "external-configuration-app" in read("src/cinnamon/metadata.json")
@@ -140,18 +143,15 @@ def main() -> None:
     assert 'gh release create "$tag"' in publisher
     assert 'gh release upload "$tag" "$deb" "$installer" --clobber' in publisher
     assert 'gh release edit "$tag" --draft=false --latest' in publisher
-    assert 'baseline_reset=true' in publisher
-    assert 'gh release delete "$tag" --yes' in publisher
-    assert 'git push --force origin "$tag"' in publisher
-    assert 'test "$remaining_tag_count" -eq 1' in publisher
+    assert "baseline_reset" not in publisher
+    assert 'git push --force origin "$tag"' not in publisher
     assert 'release_was_published=false' in publisher
     assert 'release_was_published=true' in publisher
     assert 'if [[ "$release_was_published" == false ]]; then' in publisher
     assert 'VERSION="$(sed -n \'s/^VERSION := //p\' Makefile)"' in publisher
     assert '< VERSION' not in publisher
-    assert "actions/workflows/publish.yml/dispatches" in publisher
-    assert "dispatch_ok=false" in publisher
-    assert "cannot trigger Infiltrator-Repository" in publisher
+    assert "APT_REPOSITORY_DISPATCH_TOKEN" not in publisher
+    assert "repository safety refresh" in publisher
     assert "seq 1 180" in publisher
     assert "within 30 minutes" in publisher
     assert "--draft" in publisher

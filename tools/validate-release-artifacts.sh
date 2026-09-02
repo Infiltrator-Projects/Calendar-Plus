@@ -45,12 +45,7 @@ test -f \
 test -x \
     "$TMP/generic/usr/share/cinnamon/applets/calendar-plus@the-infiltratr/settings.py"
 test -x "$TMP/generic/usr/libexec/calendar-plus-about"
-for font in \
-    mb_corpo_a_cond_regular.ttf \
-    mb_corpo_s_bold.ttf \
-    mb_corpo_s_regular.ttf; do
-    test -f "$TMP/generic/usr/share/fonts/truetype/calendar-plus/$font"
-done
+test ! -e "$TMP/generic/usr/share/fonts/truetype/calendar-plus"
 test -f \
     "$TMP/generic/usr/share/locale/en_AU/LC_MESSAGES/calendar-plus@the-infiltratr.mo"
 "$TMP/generic/usr/libexec/calendar-plus-about" --print-metadata |

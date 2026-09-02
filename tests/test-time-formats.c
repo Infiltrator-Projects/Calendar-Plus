@@ -643,6 +643,26 @@ test_historical_calendar_references(void)
     g_assert_cmpstr(iso, ==, "2026-W31-3");
     g_assert_cmpstr(french, ==, "1 Vendémiaire, An I");
     g_assert_cmpstr(roman, ==, "a.d. XVII Kal. Aug., MMDCCLXXIX A.U.C.");
+    {
+        /* Gregorian 8-13 March 2024 are Julian 24-29 February. */
+        g_autofree gchar *bis_vi =
+            calendar_format("roman", 2024, 3, 8, "short");
+        g_autofree gchar *vi =
+            calendar_format("roman", 2024, 3, 9, "short");
+        g_autofree gchar *v =
+            calendar_format("roman", 2024, 3, 10, "short");
+        g_autofree gchar *pridie =
+            calendar_format("roman", 2024, 3, 13, "short");
+
+        g_assert_cmpstr(bis_vi, ==,
+                        "a.d. bis VI Kal. Mar., MMDCCLXXVII A.U.C.");
+        g_assert_cmpstr(vi, ==,
+                        "a.d. VI Kal. Mar., MMDCCLXXVII A.U.C.");
+        g_assert_cmpstr(v, ==,
+                        "a.d. V Kal. Mar., MMDCCLXXVII A.U.C.");
+        g_assert_cmpstr(pridie, ==,
+                        "prid. Kal. Mar., MMDCCLXXVII A.U.C.");
+    }
     g_assert_cmpstr(mayan, ==,
                     "13.0.0.0.0 · 4 Ajaw · 3 K’ank’in");
     g_assert_cmpstr(bahai, ==, "1 Bahá 183 B.E.");

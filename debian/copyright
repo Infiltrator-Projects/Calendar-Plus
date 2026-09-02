@@ -10,12 +10,14 @@ Comment: Calendar Plus releases from 3.4.0 onward use an independently
  implemented runtime against Cinnamon public interfaces. Releases through 3.3.0
  retain their original source notices and copyright metadata.
 
-Files: assets/fonts/mb-corpo-fonts.tar.xz
-Copyright: Not asserted by Calendar Plus
-License: License-not-asserted
-Comment: This is the exact user-supplied MB Corpo binary font archive. Calendar
- Plus records and verifies it as a separate asset and does not claim authorship
- of, or relicense, the font programs under the GPL grant for project-owned code.
+Files: src/cinnamon/settings-schema.json
+Copyright: Linux Mint Project and Cinnamon contributors
+           2026 Shannon Smith
+License: GPL-3+
+Comment: This settings schema descends from the Cinnamon calendar applet's
+ GPL-2.0-or-later schema and has been extended for Calendar Plus. Attribution is
+ retained here while the independently implemented Calendar Plus runtime remains
+ covered by the project-owned stanza above.
 
 License: GPL-3+
  This program is free software; you can redistribute it and/or modify it under
