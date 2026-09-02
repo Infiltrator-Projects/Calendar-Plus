@@ -1,3 +1,12 @@
+calendar-plus (1.0.3) trixie; urgency=medium
+
+  * Replace the panel clock's heavy MB Corpo S Bold treatment with the bundled
+    MB Corpo S Regular face at a slightly larger 1.08em size.
+  * Preserve the improved legibility of 1.0.2 without making the small panel
+    clock visually over-weighted.
+
+ -- Shannon Smith <noreply@the-infiltratr.com>  Wed, 02 Sep 2026 10:15:00 +1000
+
 calendar-plus (1.0.2) trixie; urgency=medium
 
   * Switch the Cinnamon panel clock from MB Corpo A Condensed Regular to the
